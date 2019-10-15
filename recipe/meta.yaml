@@ -17,6 +17,8 @@ build:
   string: {{ target }}
 {%- endif %}
   skip: True  # [py < 36]
+  # cppyy is not available on Windows
+  skip: True  # [win]
 
 requirements:
   build:
