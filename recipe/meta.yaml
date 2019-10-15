@@ -1,0 +1,58 @@
+# See https://github.com/conda/conda-build/issues/2666 for the missing tag
+{% set version = environ.get('GIT_DESCRIBE_TAG', 'untagged')|string|replace('-','_') %}
+{% set target = target or 'release' %}
+
+package:
+  name: cppyythonizations
+  version: {{ version }}
+
+source:
+  git_url: {{ environ.get('FEEDSTOCK_ROOT', '..') }}
+
+build:
+  number: {{ build_number }}
+{%- if target == "release" %}
+  string: py{{ python }}_{{ build_number }}
+{%- else %}
+  string: {{ target }}
+{%- endif %}
+  skip: True  # [py < 36]
+
+requirements:
+  build:
+    - libtool
+    - automake
+{%- if target == "style" %}
+    - clangdev ==8.0.0
+{%- endif %}
+  host:
+    - python
+    - setuptools
+{%- if target == "test" %}
+    - pytest
+    - cppyy
+    - valgrind >=3.15.0
+{%- endif %}
+  run:
+    - python
+    - cppyy
+
+outputs:
+  - name: cppyythonizations
+{%- if target == "release" %}
+    script: install.sh
+    test:
+      imports:
+        - cppyythonizations
+{%- endif %}
+
+about:
+  home: https://github.com/flatsurf/cppyythonizations
+  license: MIT
+  license_file: COPYING
+  summary: Common Pythonizations for cppyy
+
+extra:
+  recipe-maintainers:
+    - saraedum
+    - videlec

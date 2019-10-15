@@ -1,0 +1,3 @@
+graft @srcdir@/cppyythonizations/include
+graft @srcdir@/cppyythonizations/pickle/cereal.hpp
+graft @srcdir@/../COPYING

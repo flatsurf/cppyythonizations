@@ -1,0 +1,7 @@
+# test artifacts
+*.trs
+__pycache__
+
+# generated files
+/test-env.sh
+/python-doctest.sh
