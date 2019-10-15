@@ -26,7 +26,7 @@ requirements:
     - libtool
     - automake
     - coreutils
-    - compiler('cxx')
+    - {{ compiler('cxx') }}
 {%- if target == "style" %}
     - clangdev ==8.0.0
 {%- endif %}
