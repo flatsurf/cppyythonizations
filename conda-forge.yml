@@ -10,7 +10,6 @@ channel_name: flatsurf
 skip_render:
   - README.md
   - LICENSE.txt
-  - LICENSE
   - .gitattributes
   - .gitignore
   - build-locally.py
