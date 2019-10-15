@@ -14,6 +14,8 @@ AX_VALGRIND_DFLT([drd], [off])
 AX_VALGRIND_DFLT([helgrind], [off])
 AX_VALGRIND_CHECK()
 
+AM_PATH_PYTHON([3.6], [], [AC_MSG_ERROR([No suitable Python version found])])
+
 dnl Our Python library relies on cppyy. It can be built without since it is a
 dnl pure Python package but we cannot test it if cppyy is not present.
 AC_ARG_WITH([pytest], AS_HELP_STRING([--without-pytest], [Do not run Python tests]))
