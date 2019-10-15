@@ -56,7 +56,7 @@ T decerealize(const std::string &serialized) {
   return value;
 }
 
-}
-}
+}  // namespace pickling
+}  // namespace cppyythonizations
 
 #endif
