@@ -13,7 +13,7 @@ class vpath_egg_info(egg_info):
 setup(
     name = 'cppyythonizations',
     version = '@PACKAGE_VERSION@',
-    packages = ['cppyythonizations',],
+    packages = ['cppyythonizations', 'cppyythonizations.pickling', 'cppyythonizations.util'],
     license = 'MIT',
     install_requires=[
         'cppyy'
