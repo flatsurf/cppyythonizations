@@ -1,5 +1,4 @@
-[![Build Status](https://dev.azure.com/flatsurf/conda/_apis/build/status/flatsurf.cppyythonizations?branchName=master)](https://dev.azure.com/flatsurf/conda/_build/latest?definitionId=1&branchName=master)
-![OSX disabled](https://img.shields.io/badge/OSX-disabled-lightgrey.svg)
+[![Build Status](https://dev.azure.com/flatsurf/conda/_apis/build/status/flatsurf.cppyythonizations?branchName=master)](https://dev.azure.com/flatsurf/conda/_build/latest?definitionId=7&branchName=master)
 ![Windows disabled](https://img.shields.io/badge/Windows-disabled-lightgrey.svg)
 ![ppc64le disabled](https://img.shields.io/badge/ppc64le-disabled-lightgrey.svg)
 
