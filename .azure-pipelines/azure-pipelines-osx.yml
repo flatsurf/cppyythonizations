@@ -13,18 +13,12 @@ jobs:
       osx_python_36_target_release:
         CONFIG: osx_python_36_target_release
         UPLOAD_PACKAGES: True
-      osx_python_36_target_style:
-        CONFIG: osx_python_36_target_style
-        UPLOAD_PACKAGES: False
       osx_python_36_target_test:
         CONFIG: osx_python_36_target_test
         UPLOAD_PACKAGES: False
       osx_python_37_target_release:
         CONFIG: osx_python_37_target_release
         UPLOAD_PACKAGES: True
-      osx_python_37_target_style:
-        CONFIG: osx_python_37_target_style
-        UPLOAD_PACKAGES: False
       osx_python_37_target_test:
         CONFIG: osx_python_37_target_test
         UPLOAD_PACKAGES: False

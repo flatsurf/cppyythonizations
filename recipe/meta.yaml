@@ -1,6 +1,7 @@
 # See https://github.com/conda/conda-build/issues/2666 for the missing tag
 {% set version = environ.get('GIT_DESCRIBE_TAG', 'untagged')|string|replace('-','_') %}
 {% set target = target or 'release' %}
+{% set build_number = environ.get('GIT_DESCRIBE_NUMBER') %}
 
 package:
   name: cppyythonizations
@@ -24,6 +25,8 @@ requirements:
   build:
     - libtool
     - automake
+    - coreutils
+    - compiler('cxx')
 {%- if target == "style" %}
     - clangdev ==8.0.0
 {%- endif %}
