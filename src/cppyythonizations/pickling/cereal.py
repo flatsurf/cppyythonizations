@@ -95,14 +95,14 @@ def _load_headers(headers):
 
         >>> from cppyythonizations.pickling.cereal import _load_headers
         >>> _load_headers([])
-        <namespace cppyy.gbl.cppyythonizations.pickling at 0x...>
+        <namespace cppyy.gbl.cppyythonizations.pickling.cereal at 0x...>
 
     """
     cppyy.include(os.path.join(os.path.dirname(__file__), "cereal.hpp"))
     for header in headers:
         cppyy.include(header)
 
-    return cppyy.gbl.cppyythonizations.pickling
+    return cppyy.gbl.cppyythonizations.pickling.cereal
 
 def unpickle_from_cereal(t, data, headers):
     r"""
@@ -128,10 +128,10 @@ def unpickle_from_cereal(t, data, headers):
         <function unpickle_from_cereal at 0x...>
 
     """
-    return _load_headers(headers).decerealize[t, cppyy.gbl.cereal.JSONInputArchive](data)
+    return _load_headers(headers).deserialize[t](data)
 
 
-def enable_cereal(proxy, name, extra_headers=[]):
+def enable_cereal(proxy, name, headers=[]):
     r"""
     A `Pythonization <https://cppyy.readthedocs.io/en/latest/pythonizations.html>`
     to enable pickling through the `cereal <http://uscilab.github.io/cereal/>`
@@ -186,13 +186,13 @@ def enable_cereal(proxy, name, extra_headers=[]):
         >>> child = cppyy.gbl.std.make_shared[cppyy.gbl.doctest.Child]()
         >>> child.x = '0' * 1024
         >>> len(dumps(child))
-        1332
+        1224
 
     Python deduplicates the following, since it's just the same Python
     reference twice::
 
         >>> len(dumps([child, child]))
-        1339
+        1231
 
     Cereal deduplicates smart pointers::
 
@@ -200,12 +200,12 @@ def enable_cereal(proxy, name, extra_headers=[]):
         >>> parent.children.push_back(child)
         >>> parent.children.push_back(child)
         >>> len(dumps(parent))
-        1530
+        1258
 
     However, we can not deduplicate between C++ and Python yet::
 
         >>> len(dumps([parent, child]))
-        2779
+        2427
 
     As a result, the unpickled objects are also not identical anymore::
 
@@ -225,7 +225,6 @@ def enable_cereal(proxy, name, extra_headers=[]):
 
         assert cppyy.gbl.std.is_default_constructible[type(self)]().value, "only default constructible types can be handled by cereal"
 
-        headers = extra_headers + ["cereal/archives/json.hpp"]
-        return (unpickle_from_cereal, (type(self), _load_headers(headers).cerealize[type(self), cppyy.gbl.cereal.JSONOutputArchive](self), headers))
+        return (unpickle_from_cereal, (type(self), _load_headers(headers).serialize[type(self)](self), headers))
 
     proxy.__reduce__ = reduce

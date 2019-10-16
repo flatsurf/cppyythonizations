@@ -30,32 +30,36 @@
 #include <sstream>
 #include <string>
 
+#include <cereal/archives/json.hpp>
+
 namespace cppyythonizations {
 namespace pickling {
+namespace cereal {
 
 // A helper to get RAII that cereal needs to make sure that its output has been flushed.
-template <typename T, typename Archive>
-std::string cerealize(const T &value) {
+template <typename T>
+std::string serialize(const T &value) {
   std::stringstream serialized;
   {
-    Archive archive(serialized);
+    ::cereal::JSONOutputArchive archive(serialized, ::cereal::JSONOutputArchive::Options::NoIndent());
     archive(value);
   }
   return serialized.str();
 }
 
 // For the sake of symmetry, the same for deserialization.
-template <typename T, typename Archive>
-T decerealize(const std::string &serialized) {
+template <typename T>
+T deserialize(const std::string &serialized) {
   std::stringstream stream(serialized);
   T value;
   {
-    Archive archive(stream);
+    ::cereal::JSONInputArchive archive(stream);
     archive(value);
   }
   return value;
 }
 
+}  // namespace cereal
 }  // namespace pickling
 }  // namespace cppyythonizations
 
