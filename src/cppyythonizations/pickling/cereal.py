@@ -145,7 +145,10 @@ def _load_headers(headers):
     """
     cppyy.include(os.path.join(os.path.dirname(__file__), "cereal.hpp"))
     for header in headers:
-        cppyy.include(header)
+        if callable(header):
+            header()
+        else:
+            cppyy.include(header)
 
     return cppyy.gbl.cppyythonizations.pickling.cereal
 
