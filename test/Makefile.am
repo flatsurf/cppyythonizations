@@ -9,7 +9,7 @@ BUILT_SOURCES = test-env.sh python-doctest.sh
 EXTRA_DIST += test-env.sh.in python-doctest.sh.in
 CLEANFILES = test-env.sh python-doctest.sh
 $(builddir)/test-env.sh: $(srcdir)/test-env.sh.in Makefile
-	sed -e 's,[@]srcdir[@],$(srcdir),g' -e 's,[@]builddir[@],$(builddir),g' -e 's,[@]pythondir[@],$(pythondir),g' < $< > $@
+	sed -e 's,[@]abs_srcdir[@],$(abs_srcdir),g' -e 's,[@]pythondir[@],$(pythondir),g' < $< > $@
 $(builddir)/python-doctest.sh: $(srcdir)/python-doctest.sh.in Makefile
-	sed -e 's,[@]srcdir[@],$(srcdir),g' -e 's,[@]builddir[@],$(builddir),g' < $< > $@
+	sed -e 's,[@]srcdir[@],$(srcdir),g' < $< > $@
 	chmod +x $@

@@ -113,6 +113,7 @@ final_results
 
 ### Bear outputs for C++ tools
 compile_commands.json
+compile_flags.txt
 
 ### ASV Benchmark Tool
 .asv
