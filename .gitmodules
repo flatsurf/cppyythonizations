@@ -3,4 +3,4 @@
 	url = https://github.com/flatsurf/conda-recipes
 [submodule "src/external/cereal"]
 	path = src/external/cereal
-	url = https://github.com/USCiLab/cereal.git
+	url = https://github.com/flatsurf/cereal.git

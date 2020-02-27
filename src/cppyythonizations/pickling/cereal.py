@@ -62,7 +62,7 @@ default constructor. However, we need an additional cereal header to support sma
 # ********************************************************************
 #  This file is part of cppyythonizations.
 #
-#        Copyright (C) 2019 Julian Rüth
+#        Copyright (C) 2019-2020 Julian Rüth
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -83,7 +83,14 @@ default constructor. However, we need an additional cereal header to support sma
 # SOFTWARE.
 # ********************************************************************
 
-import os.path
+import cppyy
+import os, os.path
+
+# Make sure cppyy loads our own patched cereal headers to
+# work around
+# https://bitbucket.org/wlav/cppyy/issues/201/scope-of-static-variables
+cppyy.include(os.path.join(os.path.dirname(__file__), '..', 'include/cereal/details/static_object.hpp'))
+
 import cppyy
 
 def _load_headers(headers):
@@ -96,6 +103,44 @@ def _load_headers(headers):
         >>> from cppyythonizations.pickling.cereal import _load_headers
         >>> _load_headers([])
         <namespace cppyy.gbl.cppyythonizations.pickling.cereal at 0x...>
+
+    TESTS:
+
+    Check that cereal's polymorphism support works, i.e., that we worked around
+    https://bitbucket.org/wlav/cppyy/issues/201/scope-of-static-variables
+    correctly::
+
+        >>> import cppyy
+        >>> from cppyythonizations.pickling.cereal import enable_cereal
+        >>> from cppyythonizations.util import filtered
+        >>> enable_cereal = filtered('Base')(enable_cereal)
+        >>> cppyy.py.add_pythonization(enable_cereal)
+        >>> cppyy.cppdef(r'''
+        ... #include <cereal/types/memory.hpp>
+        ... struct Base {
+        ...   virtual int f() = 0;
+        ...   template <typename Archive>
+        ...   void serialize(Archive&) {}
+        ... };
+        ... struct Derived : public Base {
+        ...   int f() override { return 1337; }
+        ...   template <typename Archive>
+        ...   void serialize(Archive& archive) {
+        ...     archive(cereal::base_class<Base>(this));
+        ...   }
+        ... };
+        ... CEREAL_REGISTER_TYPE(Derived);
+        ... ''')
+        True
+        >>> cppyy.include('memory')
+        >>> derived = cppyy.gbl.std.make_unique['Derived']()
+        >>> derived = cppyy.gbl.std.unique_ptr['Base'](cppyy.gbl.std.move(derived.__smartptr__()))
+        >>> derived.f()
+        1337
+        >>> from pickle import loads, dumps
+        >>> derived = loads(dumps(derived))
+        >>> derived.f()
+        1337
 
     """
     cppyy.include(os.path.join(os.path.dirname(__file__), "cereal.hpp"))

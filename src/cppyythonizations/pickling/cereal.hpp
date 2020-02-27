@@ -1,7 +1,7 @@
 /**********************************************************************
  *  This file is part of cppyythonizations.
  *
- *        Copyright (C) 2019 Julian Rüth
+ *        Copyright (C) 2019-2020 Julian Rüth
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a copy
  *  of this software and associated documentation files (the "Software"), to deal
@@ -31,6 +31,8 @@
 #include <string>
 
 #include <cereal/archives/json.hpp>
+#include <cereal/cereal.hpp>
+#include <cereal/types/memory.hpp>
 
 namespace cppyythonizations {
 namespace pickling {
