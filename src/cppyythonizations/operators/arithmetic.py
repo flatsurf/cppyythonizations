@@ -53,6 +53,9 @@ import cppyy
 
 cppyy.cppdef('''
 namespace cppyythonizations::operators {
+template <typename T>
+auto neg(T&& self) { return -std::forward<T>(self); }
+
 template <typename T, typename S>
 auto add(T&& lhs, S&& rhs) { return std::forward<T>(lhs) + std::forward<S>(rhs); }
 template <typename T, typename S>
@@ -101,51 +104,52 @@ T& irshift(T& lhs, S&& rhs) { return lhs >>= std::forward<S>(rhs); }
 
 ''')
 
-def enable_arithmetic(proxy, name):
+def enable_operator(op, prefixes=["", "r", "i"]):
+    def enable_operator_op(proxy, name, unwrap=None):
+        namespace = cppyy.gbl.cppyythonizations.operators
+        for prefix in prefixes:
+            cpp_binary = getattr(namespace, prefix + op)
+            py_binary = lambda self, rhs: cpp_binary(self, rhs)
+            unwrap_py_binary = py_binary if unwrap is None else lambda self, rhs: unwrap(py_binary(self, rhs))
+            setattr(proxy, "__" + prefix + op + "__", unwrap_py_binary)
+    return enable_operator_op
+
+def enable_neg(proxy, name, unwrap=None):
+    enable_operator("neg", [""])(proxy, name, unwrap)
+
+def enable_addable(proxy, name, unwrap=None):
+    enable_operator("add")(proxy, name, unwrap)
+
+def enable_subtractable(proxy, name, unwrap=None):
+    enable_operator("sub")(proxy, name, unwrap)
+
+def enable_multipliable(proxy, name, unwrap=None):
+    enable_operator("mul")(proxy, name, unwrap)
+
+def enable_dividable(proxy, name, unwrap=None):
+    enable_operator("truediv")(proxy, name, unwrap)
+
+def enable_modable(proxy, name, unwrap=None):
+    enable_operator("mod")(proxy, name, unwrap)
+
+def enable_left_shiftable(proxy, name, unwrap=None):
+    enable_operator("lshift")(proxy, name, unwrap)
+
+def enable_right_shiftable(proxy, name, unwrap=None):
+    enable_operator("rshift")(proxy, name, unwrap)
+
+def enable_arithmetic(proxy, name, unwrap=None):
     r"""
     A `Pythonization <https://cppyy.readthedocs.io/en/latest/pythonizations.html>`
     to make sure that all arithmetic operators from C++ are actually picked up
     by cppyy.
 
     """
-    enable_addable(proxy, name)
-    enable_subtractable(proxy, name)
-    enable_multipliable(proxy, name)
-    enable_dividable(proxy, name)
+    enable_addable(proxy, name, unwrap)
+    enable_subtractable(proxy, name, unwrap)
+    enable_multipliable(proxy, name, unwrap)
+    enable_dividable(proxy, name, unwrap)
 
-def enable_addable(proxy, name):
-    proxy.__add__ = lambda self, rhs: cppyy.gbl.cppyythonizations.operators.add(self, rhs)
-    proxy.__iadd__ = lambda self, rhs: cppyy.gbl.cppyythonizations.operators.iadd(self, rhs)
-    proxy.__radd__ = lambda self, rhs: cppyy.gbl.cppyythonizations.operators.radd(self, rhs)
-
-def enable_subtractable(proxy, name):
-    proxy.__sub__ = lambda self, rhs: cppyy.gbl.cppyythonizations.operators.sub(self, rhs)
-    proxy.__isub__ = lambda self, rhs: cppyy.gbl.cppyythonizations.operators.isub(self, rhs)
-    proxy.__rsub__ = lambda self, rhs: cppyy.gbl.cppyythonizations.operators.rsub(self, rhs)
-
-def enable_multipliable(proxy, name):
-    proxy.__mul__ = lambda self, rhs: cppyy.gbl.cppyythonizations.operators.mul(self, rhs)
-    proxy.__imul__ = lambda self, rhs: cppyy.gbl.cppyythonizations.operators.imul(self, rhs)
-    proxy.__rmul__ = lambda self, rhs: cppyy.gbl.cppyythonizations.operators.rmul(self, rhs)
-
-def enable_dividable(proxy, name):
-    proxy.__truediv__ = lambda self, rhs: cppyy.gbl.cppyythonizations.operators.truediv(self, rhs)
-    proxy.__itruediv__ = lambda self, rhs: cppyy.gbl.cppyythonizations.operators.itruediv(self, rhs)
-    proxy.__rtruediv__ = lambda self, rhs: cppyy.gbl.cppyythonizations.operators.rtruediv(self, rhs)
-
-def enable_modable(proxy, name):
-    proxy.__mod__ = lambda self, rhs: cppyy.gbl.cppyythonizations.operators.mod(self, rhs)
-    proxy.__imod__ = lambda self, rhs: cppyy.gbl.cppyythonizations.operators.imod(self, rhs)
-    proxy.__rmod__ = lambda self, rhs: cppyy.gbl.cppyythonizations.operators.rmod(self, rhs)
-
-def enable_left_shiftable(proxy, name):
-    proxy.__lshift__ = lambda self, rhs: cppyy.gbl.cppyythonizations.operators.lshift(self, rhs)
-    proxy.__ilshift__ = lambda self, rhs: cppyy.gbl.cppyythonizations.operators.ilshift(self, rhs)
-
-def enable_right_shiftable(proxy, name):
-    proxy.__rshift__ = lambda self, rhs: cppyy.gbl.cppyythonizations.operators.rshift(self, rhs)
-    proxy.__irshift__ = lambda self, rhs: cppyy.gbl.cppyythonizations.operators.irshift(self, rhs)
-
-def enable_shiftable(proxy, name):
-    enable_left_shiftable(proxy, name)
-    enable_right_shiftable(proxy, name)
+def enable_shiftable(proxy, name, unwrap=None):
+    enable_left_shiftable(proxy, name, unwrap)
+    enable_right_shiftable(proxy, name, unwrap)
