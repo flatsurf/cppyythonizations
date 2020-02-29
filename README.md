@@ -55,7 +55,7 @@ run
 
 ```
 conda config --add channels conda-forge
-conda create -n cppyythonizations-build cppyy setuptools pytest
+conda create -n cppyythonizations-build cppyy setuptools pytest gmp boost-cpp
 conda activate cppyythonizations-build
 git clone --recurse-submodules https://github.com/flatsurf/cppyythonizations.git
 cd cppyythonizations

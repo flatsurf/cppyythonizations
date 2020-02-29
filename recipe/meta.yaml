@@ -36,6 +36,8 @@ requirements:
 {%- if target == "test" %}
     - pytest
     - cppyy
+    - boost-cpp
+    - gmp
     - valgrind >=3.15.0  # [linux]
 {%- endif %}
   run:
