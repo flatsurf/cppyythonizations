@@ -109,9 +109,10 @@ def enable_operator(op, prefixes=["", "r", "i"]):
         namespace = cppyy.gbl.cppyythonizations.operators
         for prefix in prefixes:
             cpp_binary = getattr(namespace, prefix + op)
-            py_binary = lambda self, rhs: cpp_binary(self, rhs)
-            unwrap_py_binary = py_binary if unwrap is None else lambda self, rhs: unwrap(py_binary(self, rhs))
-            setattr(proxy, "__" + prefix + op + "__", unwrap_py_binary)
+            def make_py_binary(cpp_binary):
+                py_binary = lambda self, rhs: cpp_binary(self, rhs)
+                return py_binary if unwrap is None else lambda self, rhs: unwrap(py_binary(self, rhs))
+            setattr(proxy, "__" + prefix + op + "__", make_py_binary(cpp_binary))
     return enable_operator_op
 
 def enable_neg(proxy, name, unwrap=None):
