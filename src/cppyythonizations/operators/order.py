@@ -19,7 +19,7 @@ We define a C++ class with boost operators::
    ... }''')
    True
 
-Operators work instances of this class::
+Operators work on instances of this class::
 
     >>> demo = cppyy.gbl.doctest.operators.TotallyOrdered()
     >>> demo <= demo
@@ -72,7 +72,8 @@ bool ne(T&& lhs, S&& rhs) { return std::forward<T>(lhs) != std::forward<S>(rhs);
 def enable_total_order(proxy, name):
     r"""
     A `Pythonization <https://cppyy.readthedocs.io/en/latest/pythonizations.html>`
-    to make sure that all operators from C++ are actually picked up by cppyy.
+    to make sure that all comparison operators from C++ are actually picked up
+    by cppyy.
 
     EXAMPLES::
 
