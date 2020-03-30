@@ -1,5 +1,7 @@
 MACOSX_DEPLOYMENT_TARGET:
 - '10.9'
+boost_cpp:
+- 1.70.0
 channel_sources:
 - flatsurf,conda-forge,defaults
 channel_targets:
@@ -8,11 +10,17 @@ cxx_compiler:
 - clangxx
 cxx_compiler_version:
 - '9'
+gmp:
+- '6'
 macos_machine:
 - x86_64-apple-darwin13.4.0
 macos_min_version:
 - '10.9'
 pin_run_as_build:
+  boost-cpp:
+    max_pin: x.x.x
+  gmp:
+    max_pin: x
   python:
     min_pin: x.x
     max_pin: x.x

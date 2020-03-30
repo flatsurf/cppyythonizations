@@ -1,3 +1,5 @@
+boost_cpp:
+- 1.70.0
 channel_sources:
 - flatsurf,conda-forge,defaults
 channel_targets:
@@ -8,7 +10,13 @@ cxx_compiler_version:
 - '7'
 docker_image:
 - condaforge/linux-anvil-comp7
+gmp:
+- '6'
 pin_run_as_build:
+  boost-cpp:
+    max_pin: x.x.x
+  gmp:
+    max_pin: x
   python:
     min_pin: x.x
     max_pin: x.x
