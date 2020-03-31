@@ -26,5 +26,5 @@
 
 set -ex
 
-TARGETS=`grep -l '>>>' @srcdir@/../src/cppyythonizations/*/*.py`
-pytest --doctest-modules $TARGETS
+TARGETS=`grep -l '>>>' @abs_srcdir@/../src/cppyythonizations/*/*.py`
+pytest --doctest-modules $TARGETS $@

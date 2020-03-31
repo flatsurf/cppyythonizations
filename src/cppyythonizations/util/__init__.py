@@ -120,3 +120,40 @@ def filtered(filter=lambda proxy, name: True):
         return wrapped
 
     return wrap
+
+def add_method(name):
+    r"""
+    Decorator which turns a function into a Pythonizations which adds that
+    function as ``name``.
+
+    This is a somewhat trivial operation but it hopefully makes trivial
+    Pythonizations a bit easier to parse. More importantly, if this replaces an
+    existing C++ method, the original C++ method is available as `.cpp` on the
+    new method.
+
+    EXAMPLES::
+
+    >>> cppyy.py.add_pythonization(filtered("WithAdditionalMethod")(add_method("additionalMethod")(lambda self: 1337)), )
+    >>> cppyy.py.add_pythonization(filtered("WithAdditionalMethod")(add_method("replacedMethod")(lambda self: self.replacedMethod.cpp(self) + 1337)), )
+    >>> cppyy.cppdef(r'''
+    ... struct WithAdditionalMethod {
+    ...   int replacedMethod() { return 42; }
+    ... };
+    ... ''')
+    True
+    >>> cppyy.gbl.WithAdditionalMethod().additionalMethod()
+    1337
+    >>> cppyy.gbl.WithAdditionalMethod().replacedMethod()
+    1379
+
+    """
+    def wrap(function):
+        def wrapped(proxy, typename):
+            method = function
+            if hasattr(proxy, name):
+                method = lambda *args, **kwargs: function(*args, **kwargs)
+                method.cpp = getattr(proxy, name)
+            setattr(proxy, name, method)
+        return wrapped
+
+    return wrap

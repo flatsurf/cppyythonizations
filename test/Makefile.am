@@ -11,5 +11,5 @@ CLEANFILES = test-env.sh python-doctest.sh
 $(builddir)/test-env.sh: $(srcdir)/test-env.sh.in Makefile
 	sed -e 's,[@]abs_srcdir[@],$(abs_srcdir),g' -e 's,[@]pythondir[@],$(pythondir),g' < $< > $@
 $(builddir)/python-doctest.sh: $(srcdir)/python-doctest.sh.in Makefile
-	sed -e 's,[@]srcdir[@],$(srcdir),g' < $< > $@
+	sed -e 's,[@]abs_srcdir[@],$(abs_srcdir),g' < $< > $@
 	chmod +x $@
