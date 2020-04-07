@@ -157,3 +157,33 @@ def add_method(name):
         return wrapped
 
     return wrap
+
+def wrap_method(name):
+    r"""
+    Decorator which turns a function into a Pythonization that wraps an
+    existing method.
+
+    This is essentially a flavour of ``add_method`` which passes the original
+    bound method as the first argument to the function.
+
+    EXAMPLES::
+
+    >>> cppyy.py.add_pythonization(filtered("WithMangledMethod")(wrap_method("mangledMethod")(lambda self, cpp: cpp() + 1337)), )
+    >>> cppyy.cppdef(r'''
+    ... struct WithMangledMethod {
+    ...   int mangledMethod() { return 42; }
+    ... };
+    ... ''')
+    True
+    >>> cppyy.gbl.WithMangledMethod().mangledMethod()
+    1379
+
+    """
+    def wrap(mangle):
+        def wrapped(proxy, typename):
+            method = lambda self, *args, **kwargs: mangle(self, lambda *args_, **kwargs_: method.cpp(self, *args_, **kwargs_), *args, **kwargs)
+            method.cpp = getattr(proxy, name)
+            setattr(proxy, name, method)
+        return wrapped
+
+    return wrap
