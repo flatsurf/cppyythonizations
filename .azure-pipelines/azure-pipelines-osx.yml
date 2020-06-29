@@ -21,7 +21,6 @@ jobs:
   timeoutInMinutes: 360
 
   steps:
-  # TODO: Fast finish on azure pipelines?
   - script: |
       export CI=azure
       export OSX_FORCE_SDK_DOWNLOAD="1"
