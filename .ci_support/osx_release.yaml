@@ -1,5 +1,11 @@
 MACOSX_DEPLOYMENT_TARGET:
 - '10.9'
+_python:
+- 3.6.* *_cpython
+- 3.7.* *_cpython
+action:
+- release
+- release
 boost_cpp:
 - 1.70.0
 channel_sources:
@@ -12,6 +18,9 @@ cxx_compiler_version:
 - '9'
 gmp:
 - '6'
+job:
+- release
+- release
 macos_machine:
 - x86_64-apple-darwin13.4.0
 macos_min_version:
@@ -21,10 +30,7 @@ pin_run_as_build:
     max_pin: x.x.x
   gmp:
     max_pin: x
-  python:
-    min_pin: x.x
-    max_pin: x.x
-python:
-- '3.6'
-target:
-- test
+zip_keys:
+- - job
+  - action
+  - _python

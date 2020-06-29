@@ -1,7 +1,8 @@
-# See https://github.com/conda/conda-build/issues/2666 for the missing tag
-{% set version = environ.get('GIT_DESCRIBE_TAG', 'untagged')|string|replace('-','_') %}
-{% set target = target or 'release' %}
+{% set version = environ.get('GIT_DESCRIBE_TAG', 'untagged')| string | replace('-','_') %}
 {% set build_number = environ.get('GIT_DESCRIBE_NUMBER') %}
+{% set action = action or 'release' %}
+{% set py = _python | replace('*', '') | replace(' ', '') | replace('.', '') %}
+{% set test_requirements = action in ["test", "coverage", "benchmark"] %}
 
 package:
   name: cppyythonizations
@@ -12,14 +13,14 @@ source:
 
 build:
   number: {{ build_number }}
-{%- if target == "release" %}
-  string: py{{ python }}_{{ build_number }}
-{%- else %}
-  string: {{ target }}
+{%- if action == "release" %}
+  string: py{{ py }}_{{ build_number }}
 {%- endif %}
-  skip: True  # [py < 36]
   # cppyy is not available on Windows
   skip: True  # [win]
+{%- if action in ["coverage", "style"] %}
+  skip: True  # [not linux]
+{%- endif %}
 
 requirements:
   build:
@@ -27,13 +28,13 @@ requirements:
     - automake
     - coreutils
     - {{ compiler('cxx') }}
-{%- if target == "style" %}
+{%- if action == "style" %}
     - clangdev ==8.0.0
 {%- endif %}
   host:
-    - python
+    - python {{ _python }}
     - setuptools
-{%- if target == "test" %}
+{%- if test_requirements %}
     - pytest
     - cppyy
     - boost-cpp
@@ -41,16 +42,13 @@ requirements:
     - valgrind >=3.15.0  # [linux]
 {%- endif %}
   run:
-    - python
+    - python {{ _python }}
     - cppyy
 
-outputs:
-  - name: cppyythonizations
-{%- if target == "release" %}
-    script: install.sh
-    test:
-      imports:
-        - cppyythonizations
+{%- if action == "release" %}
+test:
+  imports:
+    - cppyythonizations
 {%- endif %}
 
 about:
@@ -63,3 +61,6 @@ extra:
   recipe-maintainers:
     - saraedum
     - videlec
+  variables:
+    action: {{ action }}
+    job: {{ job }}
