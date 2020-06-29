@@ -1,3 +1,7 @@
+_python:
+- 3.7.* *_cpython
+action:
+- test
 boost_cpp:
 - 1.70.0
 channel_sources:
@@ -12,15 +16,14 @@ docker_image:
 - condaforge/linux-anvil-comp7
 gmp:
 - '6'
+job:
+- test37
 pin_run_as_build:
   boost-cpp:
     max_pin: x.x.x
   gmp:
     max_pin: x
-  python:
-    min_pin: x.x
-    max_pin: x.x
-python:
-- '3.7'
-target:
-- test
+zip_keys:
+- - job
+  - action
+  - _python
