@@ -36,7 +36,7 @@ requirements:
     - setuptools
 {%- if test_requirements %}
     - pytest
-    - pyyaml
+    - ruamel.yaml
     - cppyy
     - boost-cpp
     - gmp

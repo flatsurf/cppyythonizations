@@ -102,7 +102,7 @@ This also works for objects that implement the minimal serialization protocol::
 # ********************************************************************
 
 import cppyy
-import os, os.path
+import os, os.path, sys
 
 # Make sure cppyy loads our own patched cereal headers to
 # work around
@@ -198,13 +198,9 @@ def unpickle_from_cereal(t, data, headers):
         <function unpickle_from_cereal at 0x...>
 
     """
-    import json
-
     cereal = json.loads(data)
     if isinstance(cereal, dict) and SMARTPTR_KEY in cereal:
-        import pickle
-        import base64
-        t = pickle.loads(base64.decodebytes(cereal[SMARTPTR_KEY].encode('ASCII')))
+        t = cereal[SMARTPTR_KEY]
         del cereal[SMARTPTR_KEY]
     cereal = json.dumps({ "cereal": cereal })
 
@@ -317,11 +313,33 @@ def enable_cereal(proxy, name, headers=[]):
 
     and YAML dumps::
 
-        >>> print(demo.to_yaml())
+        >>> from ruamel.yaml import YAML
+        >>> yaml = YAML()
+        >>> yaml.register_class(type(demo))
+        <class cppyy.gbl.doctest.Demo ...>
+        >>> yaml.dump(demo, sys.stdout)
+        !doctest::Demo
         x: 1337
-        <BLANKLINE>
-        >>> type(demo).from_yaml(demo.to_yaml()) == demo
+
+        >>> from io import StringIO
+        >>> yaml = YAML()
+        >>> yaml.register_class(type(demo))
+        <class cppyy.gbl.doctest.Demo ...>
+        >>> buffer = StringIO()
+        >>> yaml.dump(demo, buffer)
+        >>> buffer.seek(0)
+        0
+        >>> yaml.load(buffer).x == demo.x
         True
+
+    Note that since we integrate with ruamel.yaml, graphs of Python objects can
+    be rendered as YAML::
+
+        >>> yaml.dump([demo, demo], sys.stdout)
+        - &id001 !doctest::Demo
+          x: 1337
+        - *id001
+
 
     """
     def reduce(self):
@@ -352,14 +370,6 @@ def enable_cereal(proxy, name, headers=[]):
         """
         return self.__reduce__()[1][1]
 
-    def to_yaml(self):
-        r"""
-        Return a YAML string representing this object.
-        """
-        import json
-        import yaml as pyyaml
-        return pyyaml.dump(json.loads(self.to_json()))
-
     @classmethod
     def from_json(cls, json):
         r"""
@@ -368,16 +378,26 @@ def enable_cereal(proxy, name, headers=[]):
         return unpickle_from_cereal(cls, json, headers)
 
     @classmethod
-    def from_yaml(cls, yaml):
+    def to_yaml(cls, representer, obj):
         r"""
-        Create an object from a YAML string.
+        Return a proxy object ``obj`` as YAML.
         """
-        import json
-        import yaml as pyyaml
-        return cls.from_json(json.dumps(pyyaml.load(yaml)))
+        elementary = json.loads(obj.to_json())
+        return representer.represent_mapping(cls.yaml_tag, elementary)
+
+    @classmethod
+    def from_yaml(cls, constructor, obj):
+        r"""
+        Return a proxy object from the serialized data in ``obj``.
+        """
+        from ruamel.yaml.comments import CommentedMap
+        data = CommentedMap()
+        constructor.construct_mapping(obj, data)
+        return cls.from_json(json.dumps(dict(data)))
 
     proxy.__reduce__ = reduce
     proxy.to_json = to_json
     proxy.from_json = from_json
+    proxy.yaml_tag = '!' + proxy.__cpp_name__
     proxy.to_yaml = to_yaml
     proxy.from_yaml = from_yaml
