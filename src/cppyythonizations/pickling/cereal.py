@@ -58,6 +58,24 @@ default constructor. However, we need an additional cereal header to support sma
     >>> loads(dumps(obj)).x
     1337
 
+This also works for objects that implement the minimal serialization protocol::
+
+    >>> cppyy.cppdef(r'''
+    ... namespace doctest {
+    ... struct Minimal {
+    ...   Minimal() : x(0) {}
+    ...   Minimal(int x) : x(x) {}
+    ...   int x;
+    ...   template <typename Archive> int save_minimal(const Archive&) const { return x; }
+    ...   template <typename Archive> void load_minimal(const Archive&, const int& x) { this->x = x; }
+    ... };
+    ... }''')
+    True
+
+    >>> minimal = cppyy.gbl.doctest.Minimal(1337)
+    >>> loads(dumps(minimal)).x == minimal.x
+    True
+
 """
 # ********************************************************************
 #  This file is part of cppyythonizations.
@@ -181,7 +199,7 @@ def unpickle_from_cereal(t, data, headers):
     import json
 
     cereal = json.loads(data)
-    if SMARTPTR_KEY in cereal:
+    if isinstance(cereal, dict) and SMARTPTR_KEY in cereal:
         import pickle
         import base64
         t = pickle.loads(base64.decodebytes(cereal[SMARTPTR_KEY].encode('ASCII')))
@@ -318,7 +336,7 @@ def enable_cereal(proxy, name, headers=[]):
         cereal = json.loads(cereal)
         cereal = cereal["cereal"]
 
-        assert SMARTPTR_KEY not in cereal, "%s has a special meaning in serialization and may not be used in cereal::make_nvp"%(SMARTPTR_KEY,)
+        assert not isinstance(cereal, dict) or SMARTPTR_KEY not in cereal, "%s has a special meaning in serialization and may not be used in cereal::make_nvp"%(SMARTPTR_KEY,)
         if ptr:
             import pickle
             import base64
