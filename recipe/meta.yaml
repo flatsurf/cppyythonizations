@@ -36,6 +36,7 @@ requirements:
     - setuptools
 {%- if test_requirements %}
     - pytest
+    - pyyaml
     - cppyy
     - boost-cpp
     - gmp
