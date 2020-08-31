@@ -44,7 +44,7 @@ std::string serialize(const T &value) {
   std::stringstream serialized;
   {
     ::cereal::JSONOutputArchive archive(serialized, ::cereal::JSONOutputArchive::Options::NoIndent());
-    archive(value);
+    archive(::cereal::make_nvp("cereal", value));
   }
   return serialized.str();
 }
@@ -56,7 +56,7 @@ T deserialize(const std::string &serialized) {
   T value;
   {
     ::cereal::JSONInputArchive archive(stream);
-    archive(value);
+    archive(::cereal::make_nvp("cereal", value));
   }
   return value;
 }

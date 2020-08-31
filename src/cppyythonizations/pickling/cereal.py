@@ -93,6 +93,8 @@ cppyy.include(os.path.join(os.path.dirname(__file__), '..', 'include/cereal/deta
 
 import cppyy
 
+SMARTPTR_KEY = "__smartptr__"
+
 def _load_headers(headers):
     r"""
     Load ``headers`` to make (de)serialization work and return the namespace of
@@ -176,7 +178,20 @@ def unpickle_from_cereal(t, data, headers):
         <function unpickle_from_cereal at 0x...>
 
     """
-    return _load_headers(headers).deserialize[t](data)
+    import json
+
+    cereal = json.loads(data)
+    if SMARTPTR_KEY in cereal:
+        import pickle
+        import base64
+        t = pickle.loads(base64.decodebytes(cereal[SMARTPTR_KEY].encode('ASCII')))
+        del cereal[SMARTPTR_KEY]
+    cereal = json.dumps({ "cereal": cereal })
+
+    try:
+        return _load_headers(headers).deserialize[t](cereal)
+    except:
+        raise Exception(cereal)
 
 
 def enable_cereal(proxy, name, headers=[]):
@@ -198,7 +213,8 @@ def enable_cereal(proxy, name, headers=[]):
         ...   struct Demo {
         ...     int x; 
         ...     template <typename Archive>
-        ...     void serialize(Archive& archive) { archive(x); }
+        ...     void serialize(Archive& archive) { archive(cereal::make_nvp("x", x)); }
+        ...     bool operator==(const Demo& rhs) { return x == rhs.x; }
         ...   };
         ... }''')
         True
@@ -234,13 +250,13 @@ def enable_cereal(proxy, name, headers=[]):
         >>> child = cppyy.gbl.std.make_shared[cppyy.gbl.doctest.Child]()
         >>> child.x = '0' * 1024
         >>> len(dumps(child))
-        1224
+        1302
 
     Python deduplicates the following, since it's just the same Python
     reference twice::
 
         >>> len(dumps([child, child]))
-        1231
+        1308
 
     Cereal deduplicates smart pointers::
 
@@ -248,12 +264,12 @@ def enable_cereal(proxy, name, headers=[]):
         >>> parent.children.push_back(child)
         >>> parent.children.push_back(child)
         >>> len(dumps(parent))
-        1258
+        1241
 
     However, we can not deduplicate between C++ and Python yet::
 
         >>> len(dumps([parent, child]))
-        2427
+        2476
 
     As a result, the unpickled objects are also not identical anymore::
 
@@ -263,16 +279,79 @@ def enable_cereal(proxy, name, headers=[]):
         >>> parent.children[0] == child
         False
 
+    There are also more readable dump formats such as a JSON dump::
+
+        >>> print(demo.to_json())
+        {"x": 1337}
+        >>> type(demo).from_json(demo.to_json()) == demo
+        True
+
+    and YAML dumps::
+
+        >>> print(demo.to_yaml())
+        x: 1337
+        <BLANKLINE>
+        >>> type(demo).from_yaml(demo.to_yaml()) == demo
+        True
+
     """
     def reduce(self):
         r"""
         A generic ``__reduce__`` implementation that delegates to cereal.
         """
+        import json
+
+        if not self.__smartptr__():
+            assert cppyy.gbl.std.is_default_constructible[type(self)]().value, "only default constructible types can be handled by cereal but %s is not default constructible; you might wrap your type into a smart pointer or make it default constructible"%(type(self),)
+
         ptr = self.__smartptr__()
-        if ptr is not None: self = ptr
+        
+        cereal = _load_headers(headers).serialize[type(ptr or self)](ptr or self)
+        cereal = json.loads(cereal)
+        cereal = cereal["cereal"]
 
-        assert cppyy.gbl.std.is_default_constructible[type(self)]().value, "only default constructible types can be handled by cereal"
+        assert SMARTPTR_KEY not in cereal, "%s has a special meaning in serialization and may not be used in cereal::make_nvp"%(SMARTPTR_KEY,)
+        if ptr:
+            import pickle
+            import base64
+            cereal[SMARTPTR_KEY] = base64.encodebytes(pickle.dumps(type(ptr))).decode('ASCII')
+        
+        cereal = json.dumps(cereal)
 
-        return (unpickle_from_cereal, (type(self), _load_headers(headers).serialize[type(self)](self), headers))
+        return (unpickle_from_cereal, (type(self), cereal, headers))
+
+    def to_json(self):
+        r"""
+        Return a JSON string representing this object.
+        """
+        return self.__reduce__()[1][1]
+
+    def to_yaml(self):
+        r"""
+        Return a YAML string representing this object.
+        """
+        import json
+        import yaml as pyyaml
+        return pyyaml.dump(json.loads(self.to_json()))
+
+    @classmethod
+    def from_json(cls, json):
+        r"""
+        Create an object from a JSON string.
+        """
+        return unpickle_from_cereal(cls, json, headers)
+
+    @classmethod
+    def from_yaml(cls, yaml):
+        r"""
+        Create an object from a YAML string.
+        """
+        import json
+        import yaml as pyyaml
+        return cls.from_json(json.dumps(pyyaml.load(yaml)))
 
     proxy.__reduce__ = reduce
+    proxy.to_json = to_json
+    proxy.from_json = from_json
+    proxy.to_yaml = to_yaml
+    proxy.from_yaml = from_yaml
