@@ -102,7 +102,7 @@ This also works for objects that implement the minimal serialization protocol::
 # ********************************************************************
 
 import cppyy
-import os, os.path
+import os, os.path, sys
 
 # Make sure cppyy loads our own patched cereal headers to
 # work around
@@ -110,6 +110,8 @@ import os, os.path
 cppyy.include(os.path.join(os.path.dirname(__file__), '..', 'include/cereal/details/static_object.hpp'))
 
 import cppyy
+
+import json
 
 SMARTPTR_KEY = "__smartptr__"
 
@@ -196,13 +198,9 @@ def unpickle_from_cereal(t, data, headers):
         <function unpickle_from_cereal at 0x...>
 
     """
-    import json
-
     cereal = json.loads(data)
     if isinstance(cereal, dict) and SMARTPTR_KEY in cereal:
-        import pickle
-        import base64
-        t = pickle.loads(base64.decodebytes(cereal[SMARTPTR_KEY].encode('ASCII')))
+        t = cereal[SMARTPTR_KEY]
         del cereal[SMARTPTR_KEY]
     cereal = json.dumps({ "cereal": cereal })
 
@@ -227,11 +225,12 @@ def enable_cereal(proxy, name, headers=[]):
         >>> from cppyythonizations.pickling.cereal import enable_cereal
         >>> cppyy.py.add_pythonization(enable_cereal, "doctest")
         >>> cppyy.cppdef(r'''
+        ... #include <cereal/cereal.hpp>
         ... namespace doctest {
         ...   struct Demo {
         ...     int x; 
         ...     template <typename Archive>
-        ...     void serialize(Archive& archive) { archive(cereal::make_nvp("x", x)); }
+        ...     void serialize(Archive& archive) { archive(::cereal::make_nvp("x", x)); }
         ...     bool operator==(const Demo& rhs) { return x == rhs.x; }
         ...   };
         ... }''')
@@ -266,19 +265,19 @@ def enable_cereal(proxy, name, headers=[]):
         True
 
         >>> child = cppyy.gbl.std.make_shared[cppyy.gbl.doctest.Child]()
-        >>> child.x = '0' * 1024
+        >>> child.x = 'DATA'
         >>> dumps(child, protocol=4)
-        b'\x80\x04\x95\x0b\x05\x00\x00\x00\x00\x00\x00\x8c!cppyythonizations.pickling.cereal\x94\x8c\x14unpickle_from_cereal\x94\x93\x94\x8c\x11cppyy.gbl.doctest\x94\x8c\x05Child\x94\x93\x94X\xa3\x04\x00\x00{"ptr_wrapper": {"id": 2147483649, "data": {"value0": "0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"}}, "__smartptr__": "gASVMAAAAAAAAACMDWNwcHl5LmdibC5zdGSUjBpzaGFyZWRfcHRyPGRvY3Rlc3Q6OkNoaWxkPpST\\nlC4=\\n"}\x94]\x94\x87\x94R\x94.'
+        b'\x80\x04\x95\xd7\x00\x00\x00\x00\x00\x00\x00\x8c!cppyythonizations.pickling.cereal\x94\x8c\x14unpickle_from_cereal\x94\x93\x94\x8c\x11cppyy.gbl.doctest\x94\x8c\x05Child\x94\x93\x94\x8cr{"ptr_wrapper": {"id": 2147483649, "data": {"value0": "DATA"}}, "__smartptr__": "std::shared_ptr<doctest::Child>"}\x94]\x94\x87\x94R\x94.'
         >>> len(_)
-        1302
+        226
 
     Python deduplicates the following, since it's just the same Python
     reference twice::
 
-        >>> dumps([child, child], protocol=4)
-        b'\x80\x04\x95\x11\x05\x00\x00\x00\x00\x00\x00]\x94(\x8c!cppyythonizations.pickling.cereal\x94\x8c\x14unpickle_from_cereal\x94\x93\x94\x8c\x11cppyy.gbl.doctest\x94\x8c\x05Child\x94\x93\x94X\xa3\x04\x00\x00{"ptr_wrapper": {"id": 2147483649, "data": {"value0": "0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"}}, "__smartptr__": "gASVMAAAAAAAAACMDWNwcHl5LmdibC5zdGSUjBpzaGFyZWRfcHRyPGRvY3Rlc3Q6OkNoaWxkPpST\\nlC4=\\n"}\x94]\x94\x87\x94R\x94h\ne.'
+        >>> dumps([child] * 8, protocol=4)
+        b'\x80\x04\x95\xe9\x00\x00\x00\x00\x00\x00\x00]\x94(\x8c!cppyythonizations.pickling.cereal\x94\x8c\x14unpickle_from_cereal\x94\x93\x94\x8c\x11cppyy.gbl.doctest\x94\x8c\x05Child\x94\x93\x94\x8cr{"ptr_wrapper": {"id": 2147483649, "data": {"value0": "DATA"}}, "__smartptr__": "std::shared_ptr<doctest::Child>"}\x94]\x94\x87\x94R\x94h\nh\nh\nh\nh\nh\nh\ne.'
         >>> len(_)
-        1308
+        244
 
     Cereal deduplicates smart pointers::
 
@@ -286,16 +285,16 @@ def enable_cereal(proxy, name, headers=[]):
         >>> parent.children.push_back(child)
         >>> parent.children.push_back(child)
         >>> dumps(parent, protocol=4)
-        b'\x80\x04\x95\xce\x04\x00\x00\x00\x00\x00\x00\x8c!cppyythonizations.pickling.cereal\x94\x8c\x14unpickle_from_cereal\x94\x93\x94\x8c\x11cppyy.gbl.doctest\x94\x8c\x06Parent\x94\x93\x94Xe\x04\x00\x00{"value0": [{"ptr_wrapper": {"id": 2147483649, "data": {"value0": "0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"}}}, {"ptr_wrapper": {"id": 1}}]}\x94]\x94\x87\x94R\x94.'
+        b'\x80\x04\x95\xcf\x00\x00\x00\x00\x00\x00\x00\x8c!cppyythonizations.pickling.cereal\x94\x8c\x14unpickle_from_cereal\x94\x93\x94\x8c\x11cppyy.gbl.doctest\x94\x8c\x06Parent\x94\x93\x94\x8ci{"value0": [{"ptr_wrapper": {"id": 2147483649, "data": {"value0": "DATA"}}}, {"ptr_wrapper": {"id": 1}}]}\x94]\x94\x87\x94R\x94.'
         >>> len(_)
-        1241
+        218
 
     However, we can not deduplicate between C++ and Python yet::
 
         >>> dumps([parent, child], protocol=4)
-        b'\x80\x04\x95\xa1\t\x00\x00\x00\x00\x00\x00]\x94(\x8c!cppyythonizations.pickling.cereal\x94\x8c\x14unpickle_from_cereal\x94\x93\x94\x8c\x11cppyy.gbl.doctest\x94\x8c\x06Parent\x94\x93\x94Xe\x04\x00\x00{"value0": [{"ptr_wrapper": {"id": 2147483649, "data": {"value0": "0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"}}}, {"ptr_wrapper": {"id": 1}}]}\x94]\x94\x87\x94R\x94h\x03\x8c\x11cppyy.gbl.doctest\x94\x8c\x05Child\x94\x93\x94X\xa3\x04\x00\x00{"ptr_wrapper": {"id": 2147483649, "data": {"value0": "0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"}}, "__smartptr__": "gASVMAAAAAAAAACMDWNwcHl5LmdibC5zdGSUjBpzaGFyZWRfcHRyPGRvY3Rlc3Q6OkNoaWxkPpST\\nlC4=\\n"}\x94h\x08\x87\x94R\x94e.'
+        b'\x80\x04\x95n\x01\x00\x00\x00\x00\x00\x00]\x94(\x8c!cppyythonizations.pickling.cereal\x94\x8c\x14unpickle_from_cereal\x94\x93\x94\x8c\x11cppyy.gbl.doctest\x94\x8c\x06Parent\x94\x93\x94\x8ci{"value0": [{"ptr_wrapper": {"id": 2147483649, "data": {"value0": "DATA"}}}, {"ptr_wrapper": {"id": 1}}]}\x94]\x94\x87\x94R\x94h\x03\x8c\x11cppyy.gbl.doctest\x94\x8c\x05Child\x94\x93\x94\x8cr{"ptr_wrapper": {"id": 2147483649, "data": {"value0": "DATA"}}, "__smartptr__": "std::shared_ptr<doctest::Child>"}\x94h\x08\x87\x94R\x94e.'
         >>> len(_)
-        2476
+        377
 
     As a result, the unpickled objects are also not identical anymore::
 
@@ -314,19 +313,39 @@ def enable_cereal(proxy, name, headers=[]):
 
     and YAML dumps::
 
-        >>> print(demo.to_yaml())
+        >>> from ruamel.yaml import YAML
+        >>> yaml = YAML()
+        >>> yaml.register_class(type(demo))
+        <class cppyy.gbl.doctest.Demo ...>
+        >>> yaml.dump(demo, sys.stdout)
+        !doctest::Demo
         x: 1337
-        <BLANKLINE>
-        >>> type(demo).from_yaml(demo.to_yaml()) == demo
+
+        >>> from io import StringIO
+        >>> yaml = YAML()
+        >>> yaml.register_class(type(demo))
+        <class cppyy.gbl.doctest.Demo ...>
+        >>> buffer = StringIO()
+        >>> yaml.dump(demo, buffer)
+        >>> buffer.seek(0)
+        0
+        >>> yaml.load(buffer).x == demo.x
         True
+
+    Note that since we integrate with ruamel.yaml, graphs of Python objects can
+    be rendered as YAML::
+
+        >>> yaml.dump([demo, demo], sys.stdout)
+        - &id001 !doctest::Demo
+          x: 1337
+        - *id001
+
 
     """
     def reduce(self):
         r"""
         A generic ``__reduce__`` implementation that delegates to cereal.
         """
-        import json
-
         if not self.__smartptr__():
             assert cppyy.gbl.std.is_default_constructible[type(self)]().value, "only default constructible types can be handled by cereal but %s is not default constructible; you might wrap your type into a smart pointer or make it default constructible"%(type(self),)
 
@@ -338,9 +357,8 @@ def enable_cereal(proxy, name, headers=[]):
 
         assert not isinstance(cereal, dict) or SMARTPTR_KEY not in cereal, "%s has a special meaning in serialization and may not be used in cereal::make_nvp"%(SMARTPTR_KEY,)
         if ptr:
-            import pickle
             import base64
-            cereal[SMARTPTR_KEY] = base64.encodebytes(pickle.dumps(type(ptr), protocol=4)).decode('ASCII')
+            cereal[SMARTPTR_KEY] = type(ptr).__cpp_name__
         
         cereal = json.dumps(cereal)
 
@@ -352,14 +370,6 @@ def enable_cereal(proxy, name, headers=[]):
         """
         return self.__reduce__()[1][1]
 
-    def to_yaml(self):
-        r"""
-        Return a YAML string representing this object.
-        """
-        import json
-        import yaml as pyyaml
-        return pyyaml.dump(json.loads(self.to_json()))
-
     @classmethod
     def from_json(cls, json):
         r"""
@@ -368,16 +378,26 @@ def enable_cereal(proxy, name, headers=[]):
         return unpickle_from_cereal(cls, json, headers)
 
     @classmethod
-    def from_yaml(cls, yaml):
+    def to_yaml(cls, representer, obj):
         r"""
-        Create an object from a YAML string.
+        Return a proxy object ``obj`` as YAML.
         """
-        import json
-        import yaml as pyyaml
-        return cls.from_json(json.dumps(pyyaml.load(yaml)))
+        elementary = json.loads(obj.to_json())
+        return representer.represent_mapping(cls.yaml_tag, elementary)
+
+    @classmethod
+    def from_yaml(cls, constructor, obj):
+        r"""
+        Return a proxy object from the serialized data in ``obj``.
+        """
+        from ruamel.yaml.comments import CommentedMap
+        data = CommentedMap()
+        constructor.construct_mapping(obj, data)
+        return cls.from_json(json.dumps(dict(data)))
 
     proxy.__reduce__ = reduce
     proxy.to_json = to_json
     proxy.from_json = from_json
+    proxy.yaml_tag = '!' + proxy.__cpp_name__
     proxy.to_yaml = to_yaml
     proxy.from_yaml = from_yaml
