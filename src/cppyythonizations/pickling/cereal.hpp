@@ -25,14 +25,13 @@
 #ifndef CPPYYTHONIZATIONS_PICKLE_CEREAL_HPP
 #define CPPYYTHONIZATIONS_PICKLE_CEREAL_HPP
 
+#include <cereal/archives/json.hpp>
+#include <cereal/cereal.hpp>
+#include <cereal/types/memory.hpp>
 #include <iosfwd>
 #include <memory>
 #include <sstream>
 #include <string>
-
-#include <cereal/archives/json.hpp>
-#include <cereal/cereal.hpp>
-#include <cereal/types/memory.hpp>
 
 namespace cppyythonizations {
 namespace pickling {

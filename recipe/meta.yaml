@@ -29,7 +29,7 @@ requirements:
     - coreutils
     - {{ compiler('cxx') }}
 {%- if action == "style" %}
-    - clangdev ==8.0.0
+    - clangdev ==10.0.1
 {%- endif %}
   host:
     - python {{ _python }}
