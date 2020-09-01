@@ -198,19 +198,15 @@ def unpickle_from_cereal(t, data, headers):
         <function unpickle_from_cereal at 0x...>
 
     """
-    cereal = json.loads(data)
-    if isinstance(cereal, dict) and SMARTPTR_KEY in cereal:
-        t = cereal[SMARTPTR_KEY]
-        del cereal[SMARTPTR_KEY]
-    cereal = json.dumps({ "cereal": cereal })
+    if isinstance(data, dict) and SMARTPTR_KEY in data:
+        t = data[SMARTPTR_KEY]
+        del data[SMARTPTR_KEY]
+    data = json.dumps({ "cereal": data })
 
-    try:
-        return _load_headers(headers).deserialize[t](cereal)
-    except:
-        raise Exception(cereal)
+    return _load_headers(headers).deserialize[t](data)
 
 
-def enable_cereal(proxy, name, headers=[]):
+def enable_cereal(proxy, name, headers=[], yaml_tag=None):
     r"""
     A `Pythonization <https://cppyy.readthedocs.io/en/latest/pythonizations.html>`
     to enable pickling through the `cereal <http://uscilab.github.io/cereal/>`
@@ -267,34 +263,30 @@ def enable_cereal(proxy, name, headers=[]):
         >>> child = cppyy.gbl.std.make_shared[cppyy.gbl.doctest.Child]()
         >>> child.x = 'DATA'
         >>> dumps(child, protocol=4)
-        b'\x80\x04\x95\xd7\x00\x00\x00\x00\x00\x00\x00\x8c!cppyythonizations.pickling.cereal\x94\x8c\x14unpickle_from_cereal\x94\x93\x94\x8c\x11cppyy.gbl.doctest\x94\x8c\x05Child\x94\x93\x94\x8cr{"ptr_wrapper": {"id": 2147483649, "data": {"value0": "DATA"}}, "__smartptr__": "std::shared_ptr<doctest::Child>"}\x94]\x94\x87\x94R\x94.'
+        b'\x80\x04\x95\xcf\x00\x00\x00\x00\x00\x00\x00\x8c!cppyythonizations.pickling.cereal\x94\x8c\x14unpickle_from_cereal\x94\x93\x94\x8c\x11cppyy.gbl.doctest\x94\x8c\x05Child\x94\x93\x94}\x94(\x8c\x0bptr_wrapper\x94}\x94(\x8c\x02id\x94\x8a\x05\x01\x00\x00\x80\x00\x8c\x04data\x94}\x94\x8c\x06value0\x94\x8c\x04DATA\x94su\x8c\x0c__smartptr__\x94\x8c\x1fstd::shared_ptr<doctest::Child>\x94u]\x94\x87\x94R\x94.'
         >>> len(_)
-        226
+        218
 
     Python deduplicates the following, since it's just the same Python
     reference twice::
 
         >>> dumps([child] * 8, protocol=4)
-        b'\x80\x04\x95\xe9\x00\x00\x00\x00\x00\x00\x00]\x94(\x8c!cppyythonizations.pickling.cereal\x94\x8c\x14unpickle_from_cereal\x94\x93\x94\x8c\x11cppyy.gbl.doctest\x94\x8c\x05Child\x94\x93\x94\x8cr{"ptr_wrapper": {"id": 2147483649, "data": {"value0": "DATA"}}, "__smartptr__": "std::shared_ptr<doctest::Child>"}\x94]\x94\x87\x94R\x94h\nh\nh\nh\nh\nh\nh\ne.'
+        b'\x80\x04\x95\xe1\x00\x00\x00\x00\x00\x00\x00]\x94(\x8c!cppyythonizations.pickling.cereal\x94\x8c\x14unpickle_from_cereal\x94\x93\x94\x8c\x11cppyy.gbl.doctest\x94\x8c\x05Child\x94\x93\x94}\x94(\x8c\x0bptr_wrapper\x94}\x94(\x8c\x02id\x94\x8a\x05\x01\x00\x00\x80\x00\x8c\x04data\x94}\x94\x8c\x06value0\x94\x8c\x04DATA\x94su\x8c\x0c__smartptr__\x94\x8c\x1fstd::shared_ptr<doctest::Child>\x94u]\x94\x87\x94R\x94h\x13h\x13h\x13h\x13h\x13h\x13h\x13e.'
         >>> len(_)
-        244
+        236
 
     Cereal deduplicates smart pointers::
 
         >>> parent = cppyy.gbl.doctest.Parent()
         >>> parent.children.push_back(child)
         >>> parent.children.push_back(child)
-        >>> dumps(parent, protocol=4)
-        b'\x80\x04\x95\xcf\x00\x00\x00\x00\x00\x00\x00\x8c!cppyythonizations.pickling.cereal\x94\x8c\x14unpickle_from_cereal\x94\x93\x94\x8c\x11cppyy.gbl.doctest\x94\x8c\x06Parent\x94\x93\x94\x8ci{"value0": [{"ptr_wrapper": {"id": 2147483649, "data": {"value0": "DATA"}}}, {"ptr_wrapper": {"id": 1}}]}\x94]\x94\x87\x94R\x94.'
-        >>> len(_)
-        218
+        >>> len(dumps(parent, protocol=4))
+        190
 
     However, we can not deduplicate between C++ and Python yet::
 
-        >>> dumps([parent, child], protocol=4)
-        b'\x80\x04\x95n\x01\x00\x00\x00\x00\x00\x00]\x94(\x8c!cppyythonizations.pickling.cereal\x94\x8c\x14unpickle_from_cereal\x94\x93\x94\x8c\x11cppyy.gbl.doctest\x94\x8c\x06Parent\x94\x93\x94\x8ci{"value0": [{"ptr_wrapper": {"id": 2147483649, "data": {"value0": "DATA"}}}, {"ptr_wrapper": {"id": 1}}]}\x94]\x94\x87\x94R\x94h\x03\x8c\x11cppyy.gbl.doctest\x94\x8c\x05Child\x94\x93\x94\x8cr{"ptr_wrapper": {"id": 2147483649, "data": {"value0": "DATA"}}, "__smartptr__": "std::shared_ptr<doctest::Child>"}\x94h\x08\x87\x94R\x94e.'
-        >>> len(_)
-        377
+        >>> len(dumps([parent, child], protocol=4))
+        341
 
     As a result, the unpickled objects are also not identical anymore::
 
@@ -318,7 +310,7 @@ def enable_cereal(proxy, name, headers=[]):
         >>> yaml.register_class(type(demo))
         <class cppyy.gbl.doctest.Demo ...>
         >>> yaml.dump(demo, sys.stdout)
-        !doctest::Demo
+        !cppyythonizations/cereal:doctest::Demo
         x: 1337
 
         >>> from io import StringIO
@@ -336,7 +328,7 @@ def enable_cereal(proxy, name, headers=[]):
     be rendered as YAML::
 
         >>> yaml.dump([demo, demo], sys.stdout)
-        - &id001 !doctest::Demo
+        - &id001 !cppyythonizations/cereal:doctest::Demo
           x: 1337
         - *id001
 
@@ -360,30 +352,27 @@ def enable_cereal(proxy, name, headers=[]):
             import base64
             cereal[SMARTPTR_KEY] = type(ptr).__cpp_name__
         
-        cereal = json.dumps(cereal)
-
         return (unpickle_from_cereal, (type(self), cereal, headers))
 
     def to_json(self):
         r"""
         Return a JSON string representing this object.
         """
-        return self.__reduce__()[1][1]
+        return json.dumps(self.__reduce__()[1][1])
 
     @classmethod
-    def from_json(cls, json):
+    def from_json(cls, data):
         r"""
         Create an object from a JSON string.
         """
-        return unpickle_from_cereal(cls, json, headers)
+        return unpickle_from_cereal(cls, json.loads(data), headers)
 
     @classmethod
     def to_yaml(cls, representer, obj):
         r"""
         Return a proxy object ``obj`` as YAML.
         """
-        elementary = json.loads(obj.to_json())
-        return representer.represent_mapping(cls.yaml_tag, elementary)
+        return representer.represent_mapping(cls.yaml_tag, obj.__reduce__()[1][1])
 
     @classmethod
     def from_yaml(cls, constructor, obj):
@@ -398,6 +387,6 @@ def enable_cereal(proxy, name, headers=[]):
     proxy.__reduce__ = reduce
     proxy.to_json = to_json
     proxy.from_json = from_json
-    proxy.yaml_tag = '!' + proxy.__cpp_name__
+    proxy.yaml_tag = yaml_tag or '!cppyythonizations/cereal:%s'%(proxy.__cpp_name__.replace(' ', ''))
     proxy.to_yaml = to_yaml
     proxy.from_yaml = from_yaml
