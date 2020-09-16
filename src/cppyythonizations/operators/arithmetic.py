@@ -1,5 +1,5 @@
 r"""
-Pythonizations to fill in missing operators arithmetic operators.
+Pythonizations to fill in missing arithmetic operators
 
 EXAMPLES::
 
