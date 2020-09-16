@@ -10,11 +10,11 @@ EXAMPLES::
     >>> tribool = cppyy.gbl.boost.logic.tribool
 
     >>> tribool()
-    False
+    false
     >>> tribool(False)
-    False
+    false
     >>> tribool(True)
-    True
+    true
     >>> tribool.indeterminate
     indeterminate
 
@@ -120,10 +120,10 @@ def enable_printing(proxy, name):
     """
     def to_string(tribool):
         if tribool:
-            return repr(True)
+            return "true"
         elif tribool.is_indeterminate():
             return "indeterminate"
         else:
-            return repr(False)
+            return "false"
     proxy.__repr__ = to_string
     proxy.__str__ = to_string
