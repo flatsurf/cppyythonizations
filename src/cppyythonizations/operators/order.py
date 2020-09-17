@@ -10,6 +10,7 @@ EXAMPLES::
 We define a C++ class with boost operators::
 
    >>> cppyy.include("boost/operators.hpp")
+   True
    >>> cppyy.cppdef(r'''
    ... namespace doctest::operators {
    ...   struct TotallyOrdered : boost::totally_ordered<TotallyOrdered> {
@@ -82,7 +83,9 @@ def enable_total_order(proxy, name):
         >>> from cppyythonizations.util import filtered
         >>> cppyy.py.add_pythonization(filtered('__gmp_expr<__mpz_struct[1],__mpz_struct[1]>')(enable_total_order))
         >>> cppyy.include("gmpxx.h")
+        True
         >>> cppyy.load_library("gmpxx")
+        True
         >>> x = cppyy.gbl.mpz_class(0)
         >>> x < x
         False

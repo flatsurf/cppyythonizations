@@ -155,6 +155,7 @@ def _load_headers(headers):
         ... ''')
         True
         >>> cppyy.include('memory')
+        True
         >>> derived = cppyy.gbl.std.make_unique['Derived']()
         >>> derived = cppyy.gbl.std.unique_ptr['Base'](cppyy.gbl.std.move(derived.__smartptr__()))
         >>> derived.f()
