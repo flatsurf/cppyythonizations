@@ -10,6 +10,7 @@ EXAMPLES::
 We define a C++ class with boost operators::
 
    >>> cppyy.include("boost/operators.hpp")
+   True
    >>> cppyy.cppdef(r'''
    ... namespace doctest::operators {
    ...   struct Addable : boost::addable<Addable> {
