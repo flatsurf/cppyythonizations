@@ -42,7 +42,7 @@ $ACTIVITIES = [
 $VERSION_BUMP_PATTERNS = [
     ('configure.ac', r'AC_INIT', r'AC_INIT([cppyythonizations], [$VERSION], [julian.rueth@fsfe.org])'),
     ('recipe/meta.yaml', r"\{% set version =", r"{% set version = '$VERSION' %}"),
-    ('recipe/meta.yaml', r"\{% set build_number =", r"{% set build_number = '0' %&"),
+    ('recipe/meta.yaml', r"\{% set build_number =", r"{% set build_number = '0' %}"),
 ]
 
 $CHANGELOG_FILENAME = 'ChangeLog'

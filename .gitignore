@@ -133,3 +133,5 @@ vgcore.*
 
 ### Log files
 *.log
+
+rever/
