@@ -27,4 +27,4 @@
 set -ex
 
 TARGETS=`grep -l '>>>' @abs_srcdir@/../src/cppyythonizations/*/*.py`
-pytest --doctest-modules $TARGETS $@
+pytest --doctest-modules -vv $TARGETS $@

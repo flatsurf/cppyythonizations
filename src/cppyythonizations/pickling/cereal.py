@@ -1,6 +1,11 @@
 r"""
 Pythonizations to support pickling of cereal-enabled C++ classes
 
+WARNING:
+
+  As of mid 2020, we consider this serialization format, in particular the YAML
+  format, unstable and experimental. Expect it to still change frequently.
+
 EXAMPLES:
 
 Enable serialization for the types in the ``doctest`` namespace::
@@ -14,7 +19,7 @@ We define a C++ class in that namespace with the usual cereal interface::
    >>> cppyy.cppdef(r'''
    ... namespace doctest {
    ...   struct Cereal {
-   ...     int x; 
+   ...     int x;
    ...     template <typename Archive>
    ...     void serialize(Archive& archive) { archive(x); }
    ...   };
@@ -88,10 +93,10 @@ This also works for objects that implement the minimal serialization protocol::
 # to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 # copies of the Software, and to permit persons to whom the Software is
 # furnished to do so, subject to the following conditions:
-# 
+#
 # The above copyright notice and this permission notice shall be included in all
 # copies or substantial portions of the Software.
-# 
+#
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 # IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 # FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -113,7 +118,11 @@ import cppyy
 
 import json
 
+
 SMARTPTR_KEY = "__smartptr__"
+YAML_TAG_PREFIX = "tag:cppyy.dev,2020:cereal#"
+YAML_TAG_REWRITE_MAP = "tag:cppyy.dev,2020:map#"
+
 
 def _load_headers(headers):
     r"""
@@ -207,6 +216,206 @@ def unpickle_from_cereal(t, data, headers):
     return _load_headers(headers).deserialize[t](data)
 
 
+def to_yaml(cls, representer, obj):
+    r"""
+    Return a cppyy proxy object ``obj`` as YAML.
+    """
+    reduction = obj.__reduce__()[1][1]
+    if isinstance(reduction, list):
+        ret = representer.represent_sequence(cls.yaml_tag, reduction)
+    else:
+        ret = representer.represent_mapping(cls.yaml_tag, reduction)
+
+    ret = simplify(ret)
+    return ret
+
+
+def simplify(node):
+    r"""
+    Perform some simplifications on the YAML tree rooted at node. Mostly, this
+    attempts to make things more compact or more readable, working around some
+    oddities of cereal or inefficiencies that come from the original JSON format.
+    """
+    node = simplify_mappings(node)
+    return node
+
+
+def revert_simplifications(node):
+    r"""
+    Undo the changes performed by `simplify`.
+    """
+    node = revert_mappings(node)
+    return node
+
+
+def simplify_mappings(node):
+    r"""
+    Cereal saves a map very explicitly as a list of key value pairs,
+    i.e.,`[{key: "abc", value: 1}, {key: "def", value: 2}]`. For JSON
+    that's very reasonable since keys cannot have arbitrary types but
+    in YAML we do not have that limitation so we detect and rewrite
+    such mappings.
+    """
+    from ruamel.yaml.nodes import SequenceNode, MappingNode, ScalarNode
+    def to_key_value(pairs):
+        if len(pairs) != 2:
+            return False
+
+        key, value = pairs
+        if len(key) != 2:
+            return False
+        if len(value) != 2:
+            return False
+
+        if not isinstance(key[0], ScalarNode) or key[0].tag != 'tag:yaml.org,2002:str' or key[0].value != 'key':
+            return False
+        if not isinstance(value[0], ScalarNode) or value[0].tag != 'tag:yaml.org,2002:str' or value[0].value != 'value':
+            return False
+
+        return (simplify_mappings(key[1]), simplify_mappings(value[1]))
+
+    def to_map(values):
+        map = []
+
+        for value in values:
+            if not isinstance(value, MappingNode):
+                return False
+            if value.tag != 'tag:yaml.org,2002:map':
+                return False
+            kv = to_key_value(value.value)
+            if not kv:
+                return False
+
+            map.append(kv)
+
+        return map
+
+    if isinstance(node, SequenceNode):
+        map = to_map(node.value)
+        if map:
+            node = MappingNode(tag="%s%s"%(YAML_TAG_REWRITE_MAP, node.tag if node.tag != 'tag:yaml.org,2002:seq' else ''), value=map, start_mark=node.start_mark, end_mark=node.end_mark, comment=node.comment, anchor=node.anchor)
+        else:
+            node.value = [simplify_mappings(value) for value in node.value]
+    elif isinstance(node, MappingNode):
+        node.value = [(simplify_mappings(key), simplify_mappings(value)) for (key, value) in node.value]
+
+    return node
+
+
+def revert_mappings(node):
+    r"""
+    Undo the effect of simplify_mappings.
+    """
+    from ruamel.yaml.nodes import SequenceNode, MappingNode, ScalarNode
+    if isinstance(node, MappingNode):
+        if node.tag.startswith(YAML_TAG_REWRITE_MAP):
+            tag = node.tag[len(YAML_TAG_REWRITE_MAP):] or "tag:yaml.org,2002:seq"
+            node = SequenceNode(tag=tag, value=[
+                MappingNode(tag="tag:yaml.org,2002:map", value=[
+                    (ScalarNode(tag="tag:yaml.org,2002:str", value="key", start_mark=key.start_mark, end_mark=key.end_mark), revert_mappings(key)),
+                    (ScalarNode(tag="tag:yaml.org,2002:str", value="value", start_mark=value.start_mark, end_mark=value.end_mark), revert_mappings(value)),
+                ], start_mark=key.start_mark, end_mark=value.end_mark) for (key, value) in node.value
+            ], start_mark=node.start_mark, end_mark=node.end_mark, comment=node.comment, anchor=node.anchor)
+        else:
+            node.value = [(revert_mappings(key), revert_mappings(value)) for (key, value) in node.value]
+    elif isinstance(node, SequenceNode):
+        node.value = [revert_mappings(value) for value in node.value]
+
+    return node
+
+
+def multi_construct_from_yaml(constructor, tag_suffix, node):
+    r"""
+    Reconstruct the cppyy wrapper from the YAML tree ``node`` whose type is
+    given by ``type_suffix``.
+    """
+    # This might be a CPython specific approach and there might be a more
+    # generic way for doing this. (One could of course compile a typedef and
+    # read it but that seems very inefficient.)
+    cpptype = cppyy._backend.CreateScopeProxy(unescape_type_name(tag_suffix))
+    return cpptype.from_yaml(constructor, node)
+
+
+def multi_construct_from_yaml_map(constructor, tag_suffix, node):
+    r"""
+    Reconstruct the cppyy wrapper from the YAML tree ``node`` whose types is
+    given by ``type_suffix``.
+
+    This is a specialized version of ``multi_construct_from_yaml`` which works
+    for map types mangled by ``simplify_mappings``.
+    """
+    if tag_suffix.startswith(YAML_TAG_PREFIX):
+        return multi_construct_from_yaml(constructor, tag_suffix[len(YAML_TAG_PREFIX):], node)
+    else:
+        return constructor.construct_non_recursive_object(tag_suffix, revert_simplifications(node))
+
+
+def from_yaml(cls, constructor, node):
+    r"""
+    Return a proxy object from the serialized data in ``node``.
+    """
+    def construct_value(node):
+        from ruamel.yaml.nodes import SequenceNode, ScalarNode
+        if isinstance(node, SequenceNode):
+            return [construct_value(v) for v in node.value]
+        if isinstance(node, ScalarNode):
+            return constructor.construct_object(node, deep=True)
+        else:
+            data = constructor.loader.map()
+            constructor.construct_mapping(node, data, deep=True)
+            return dict(data)
+
+    node = revert_simplifications(node)
+
+    value = construct_value(node)
+
+    return cls.from_json(json.dumps(value))
+
+
+def to_json(self):
+    r"""
+    Return a JSON string representing this object.
+    """
+    return json.dumps(self.__reduce__()[1][1])
+
+
+def from_json(cls, data, headers):
+    r"""
+    Create an object from a JSON string.
+    """
+    return unpickle_from_cereal(cls, json.loads(data), headers)
+
+
+def escape_type_name(name):
+    r"""
+    Escapes a type name to conform with RFC 3986.
+
+    >>> from cppyythonizations.pickling.cereal import escape_type_name
+    >>> escape_type_name('int')
+    'int'
+    >>> escape_type_name('vector<vector<int> >')
+    'vector[vector[int]]'
+    >>> escape_type_name('vector<int[3]>')
+    'vector[int+[+3+]+]'
+    """
+    return name.replace(' ', '').replace('[', '+[+').replace(']', '+]+').replace('<', '[').replace('>', ']')
+
+
+def unescape_type_name(name):
+    r"""
+    Inverse (modulo white-space) of `escape_type_name`.
+
+    >>> from cppyythonizations.pickling.cereal import escape_type_name, unescape_type_name
+    >>> unescape_type_name(escape_type_name('int'))
+    'int'
+    >>> unescape_type_name(escape_type_name('vector<vector<int> >'))
+    'vector<vector<int>>'
+    >>> unescape_type_name(escape_type_name('vector<int[3]>'))
+    'vector<int[3]>'
+    """
+    return name.replace(']', '>').replace('[', '<').replace('+<+', '[').replace('+>+', ']')
+
+
 def enable_cereal(proxy, name, headers=[], yaml_tag=None):
     r"""
     A `Pythonization <https://cppyy.readthedocs.io/en/latest/pythonizations.html>`
@@ -225,7 +434,7 @@ def enable_cereal(proxy, name, headers=[], yaml_tag=None):
         ... #include <cereal/cereal.hpp>
         ... namespace doctest {
         ...   struct Demo {
-        ...     int x; 
+        ...     int x;
         ...     template <typename Archive>
         ...     void serialize(Archive& archive) { archive(::cereal::make_nvp("x", x)); }
         ...     bool operator==(const Demo& rhs) { return x == rhs.x; }
@@ -245,7 +454,7 @@ def enable_cereal(proxy, name, headers=[], yaml_tag=None):
         >>> cppyy.cppdef(r'''
         ... #include <memory>
         ... #include <cereal/types/vector.hpp>
-        ... 
+        ...
         ... namespace doctest {
         ...   struct Child {
         ...     std::string x;
@@ -306,33 +515,126 @@ def enable_cereal(proxy, name, headers=[], yaml_tag=None):
 
     and YAML dumps::
 
+        >>> from cppyythonizations.pickling.cereal import add_cereal
         >>> from ruamel.yaml import YAML
         >>> yaml = YAML()
+        >>> add_cereal(yaml)
         >>> yaml.register_class(type(demo))
         <class cppyy.gbl.doctest.Demo ...>
         >>> yaml.dump(demo, sys.stdout)
-        !cppyythonizations/cereal:doctest::Demo
+        %TAG !cereal! tag:cppyy.dev,2020:cereal#
+        --- !cereal!doctest::Demo
         x: 1337
 
-        >>> from io import StringIO
-        >>> yaml = YAML()
-        >>> yaml.register_class(type(demo))
-        <class cppyy.gbl.doctest.Demo ...>
-        >>> buffer = StringIO()
-        >>> yaml.dump(demo, buffer)
-        >>> buffer.seek(0)
-        0
-        >>> yaml.load(buffer).x == demo.x
-        True
+    TESTS:
+
+    A simple helper function, to dump an object and then load it again::
+
+        >>> def loadsdumps(obj):
+        ...     dump = obj.to_json()
+        ...     load = type(obj).from_json(dump)
+        ...     if type(load) != type(obj) or load != obj: raise Exception("%r dumped to %r which loaded to %r but these two are not equal"%(obj, dump, load))
+        ...     yaml = YAML()
+        ...     add_cereal(yaml)
+        ...     yaml.register_class(type(obj))
+        ...     from io import StringIO
+        ...     buffer = StringIO()
+        ...     yaml.dump(obj, buffer)
+        ...     buffer.seek(0)
+        ...     dump = buffer.read().strip()
+        ...     print(dump)
+        ...     buffer.seek(0)
+        ...     load = yaml.load(buffer)
+        ...     if type(load) != type(obj) or load != obj: raise Exception("%r dumped to %r which loaded to %r but these two are not equal"%(obj, dump, load))
+
+    Our demo object can be dumped and loaded::
+
+        >>> loadsdumps(demo)
+        %TAG !cereal! tag:cppyy.dev,2020:cereal#
+        --- !cereal!doctest::Demo
+        x: 1337
 
     Note that since we integrate with ruamel.yaml, graphs of Python objects can
     be rendered as YAML::
 
         >>> yaml.dump([demo, demo], sys.stdout)
-        - &id001 !cppyythonizations/cereal:doctest::Demo
+        %TAG !cereal! tag:cppyy.dev,2020:cereal#
+        ---
+        - &id001 !cereal!doctest::Demo
           x: 1337
         - *id001
 
+    We can serialize common types such as `std::vector` when writing out YAML::
+
+        >>> from cppyythonizations.util import filtered
+        >>> cppyy.include("cereal/types/vector.hpp")
+        True
+        >>> cppyy.py.add_pythonization(filtered("vector<int>")(enable_cereal), "std")
+        >>> v = cppyy.gbl.std.vector[int]([1, 2, 3])
+        >>> loadsdumps(v)
+        %TAG !cereal! tag:cppyy.dev,2020:cereal#
+        --- !cereal!std::vector[int]
+        - 1
+        - 2
+        - 3
+
+    We also serialize `std::map` and `std::unordered_map`::
+
+        >>> cppyy.include("cereal/types/map.hpp")
+        True
+        >>> cppyy.py.add_pythonization(filtered("map<int,int>")(enable_cereal), "std")
+        >>> m = cppyy.gbl.std.map[int, int]()
+        >>> m[1] = 2
+        >>> loadsdumps(m)
+        %TAG !cereal! tag:cppyy.dev,2020:cereal#
+        --- !<tag:cppyy.dev,2020:map#tag:cppyy.dev,2020:cereal#std::map[int,int]>
+        1: 2
+
+        >>> cppyy.include("cereal/types/unordered_map.hpp")
+        True
+        >>> cppyy.py.add_pythonization(filtered("unordered_map<int,int>")(enable_cereal), "std")
+        >>> m = cppyy.gbl.std.unordered_map[int, int]()
+        >>> m[1] = 2
+        >>> loadsdumps(m)
+        %TAG !cereal! tag:cppyy.dev,2020:cereal#
+        --- !<tag:cppyy.dev,2020:map#tag:cppyy.dev,2020:cereal#std::unordered_map[int,int]>
+        1: 2
+
+    And `std::set` and `std::unordered_set`::
+
+        >>> cppyy.include("cereal/types/set.hpp")
+        True
+        >>> cppyy.py.add_pythonization(filtered("set<int>")(enable_cereal), "std")
+        >>> s = cppyy.gbl.std.set[int]()
+        >>> _ = s.insert(1)
+        >>> loadsdumps(s)
+        %TAG !cereal! tag:cppyy.dev,2020:cereal#
+        --- !cereal!std::set[int]
+        - 1
+
+        >>> cppyy.include("cereal/types/unordered_set.hpp")
+        True
+        >>> cppyy.py.add_pythonization(filtered("unordered_set<int>")(enable_cereal), "std")
+        >>> s = cppyy.gbl.std.unordered_set[int]()
+        >>> _ = s.insert(1)
+        >>> loadsdumps(s)
+        %TAG !cereal! tag:cppyy.dev,2020:cereal#
+        --- !cereal!std::unordered_set[int]
+        - 1
+
+    Complex standard types can also be serialized::
+
+        >>> cppyy.py.add_pythonization(filtered("map<std::set<int>,std::map<int,std::string> >")(enable_cereal), "std")
+        >>> m = cppyy.gbl.std.map[cppyy.gbl.std.set[int], cppyy.gbl.std.map[int, str]]()
+        >>> m[cppyy.gbl.std.set[int]([1, 2, 3])][1337] = "A"
+        >>> loadsdumps(m)
+        %TAG !cereal! tag:cppyy.dev,2020:cereal#
+        --- !<tag:cppyy.dev,2020:map#tag:cppyy.dev,2020:cereal#std::map[std::set[int],std::map[int,std::string]]>
+        ? - 1
+          - 2
+          - 3
+        : !<tag:cppyy.dev,2020:map#>
+          1337: A
 
     """
     def reduce(self):
@@ -343,7 +645,7 @@ def enable_cereal(proxy, name, headers=[], yaml_tag=None):
             assert cppyy.gbl.std.is_default_constructible[type(self)]().value, "only default constructible types can be handled by cereal but %s is not default constructible; you might wrap your type into a smart pointer or make it default constructible"%(type(self),)
 
         ptr = self.__smartptr__()
-        
+
         cereal = _load_headers(headers).serialize[type(ptr or self)](ptr or self)
         cereal = json.loads(cereal)
         cereal = cereal["cereal"]
@@ -352,42 +654,38 @@ def enable_cereal(proxy, name, headers=[], yaml_tag=None):
         if ptr:
             import base64
             cereal[SMARTPTR_KEY] = type(ptr).__cpp_name__
-        
+
         return (unpickle_from_cereal, (type(self), cereal, headers))
-
-    def to_json(self):
-        r"""
-        Return a JSON string representing this object.
-        """
-        return json.dumps(self.__reduce__()[1][1])
-
-    @classmethod
-    def from_json(cls, data):
-        r"""
-        Create an object from a JSON string.
-        """
-        return unpickle_from_cereal(cls, json.loads(data), headers)
-
-    @classmethod
-    def to_yaml(cls, representer, obj):
-        r"""
-        Return a proxy object ``obj`` as YAML.
-        """
-        return representer.represent_mapping(cls.yaml_tag, obj.__reduce__()[1][1])
-
-    @classmethod
-    def from_yaml(cls, constructor, obj):
-        r"""
-        Return a proxy object from the serialized data in ``obj``.
-        """
-        from ruamel.yaml.comments import CommentedMap
-        data = CommentedMap()
-        constructor.construct_mapping(obj, data)
-        return cls.from_json(json.dumps(dict(data)))
 
     proxy.__reduce__ = reduce
     proxy.to_json = to_json
-    proxy.from_json = from_json
-    proxy.yaml_tag = yaml_tag or '!cppyythonizations/cereal:%s'%(proxy.__cpp_name__.replace(' ', ''))
-    proxy.to_yaml = to_yaml
-    proxy.from_yaml = from_yaml
+    proxy.from_json = classmethod(lambda cls, data: from_json(cls, data, headers))
+    proxy.yaml_tag = yaml_tag or '%s%s'%(YAML_TAG_PREFIX, escape_type_name(proxy.__cpp_name__))
+    proxy.to_yaml = classmethod(to_yaml)
+    proxy.from_yaml = classmethod(from_yaml)
+
+
+def add_cereal(yaml, handle="!cereal!"):
+    r"""
+    Enable cereal support on the ruamel.yaml loader ``yaml``.
+
+    This registers our TAG prefix and registers some multi-constructors so cppyy types can be loaded.
+    """
+    yaml.constructor.add_multi_constructor(YAML_TAG_PREFIX, multi_construct_from_yaml)
+    if handle:
+        # Unfortunately, ruamel.yaml ignores its own tags when looking up
+        # constructors. It's the responsibility of the parser to resolve the
+        # tag but the (default) RoundTripParser does not mangle tags at all.
+        # This appears to be a bug in ruamel.yaml, the constructor lookup
+        # should honor global %TAG% directives.
+        # Therefore, we need to manually register our handle as a
+        # multi-constructor here.
+        yaml.constructor.add_multi_constructor(handle, multi_construct_from_yaml)
+
+    yaml.constructor.add_multi_constructor(YAML_TAG_REWRITE_MAP, multi_construct_from_yaml_map)
+
+    if handle:
+        if yaml.tags is None:
+            yaml.tags = {}
+        if handle not in yaml.tags:
+            yaml.tags[handle] = YAML_TAG_PREFIX
