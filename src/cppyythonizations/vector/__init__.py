@@ -6,8 +6,18 @@ EXAMPLES::
     >>> import cppyy
     >>> from cppyythonizations.vector import add_vector_pythonizations
     >>> add_vector_pythonizations()
-    >>> cppyy.gbl.std.vector[int]([1, 2, 3])
-    [1, 2, 3]
+    >>> v = cppyy.gbl.std.vector[float]([1, 2, 3])
+    >>> str(v)
+    '[1.0, 2.0, 3.0]'
+
+Note that this only changes `__str__`, if you also want vectors to print as
+list in a Python prompt, you need to `enable_pretty_printing` from
+`cppyythonizations.printing`.
+
+    >>> v
+    <cppyy.gbl.std.vector<float> object at ...>
+    >>> repr(v)
+    '<cppyy.gbl.std.vector<float> object at ...>'
 
 """
 # ********************************************************************
@@ -46,14 +56,14 @@ def enable_list_printing(proxy, name):
     EXAMPLES::
 
         >>> import cppyy
-        >>> from cppyythonizations.vector import enable_list_printing
+        >>> from cppyythonizations.printing import enable_list_printing, enable_pretty_printing
         >>> from cppyythonizations.util import filtered
-        >>> cppyy.py.add_pythonizations(filtered("set<int>")(enable_list_printing))
+        >>> cppyy.py.add_pythonizations(filtered("set<int>")(enable_list_printing), "std")
+        >>> cppyy.py.add_pythonizations(filtered("set<int>")(enable_pretty_printing), "std")
         >>> cppyy.gbl.std.set[int]()
         []
 
     """
-    proxy.__repr__ = lambda self: repr(list(self))
     proxy.__str__ = lambda self: str(list(self))
 
 def add_vector_pythonizations():
@@ -62,10 +72,13 @@ def add_vector_pythonizations():
 
     EXAMPLES::
 
+        >>> import re
         >>> import cppyy
         >>> from cppyythonizations.vector import add_vector_pythonizations
+        >>> from cppyythonizations.printing import enable_pretty_printing
         >>> add_vector_pythonizations()
-        >>> cppyy.gbl.std.vector[int]()
+        >>> cppyy.py.add_pythonizations(filtered(re.compile("vector<.*>"))(enable_pretty_printing), "std")
+        >>> cppyy.gbl.std.vector[int]([1, 2, 3])
         []
 
     """

@@ -14,6 +14,14 @@ EXAMPLES::
     >>> cppyy.gbl.demo.X()
     X()
 
+TESTS:
+
+Modifying `__str__` changes how an element displays::
+
+    >>> cppyy.gbl.demo.X.__str__ = lambda self: "Y()"
+    >>> cppyy.gbl.demo.X()
+    Y()
+
 """
 # ********************************************************************
 #  This file is part of cppyythonizations.
@@ -42,4 +50,4 @@ EXAMPLES::
 from ..vector import enable_list_printing
 
 def enable_pretty_printing(proxy, name):
-    proxy.__repr__ = proxy.__str__
+    proxy.__repr__ = lambda self: proxy.__str__(self)
