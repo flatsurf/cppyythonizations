@@ -59,8 +59,8 @@ def enable_tuple_printing(proxy, name):
         >>> from cppyythonizations.tuple import enable_tuple_printing
         >>> from cppyythonizations.printing import enable_pretty_printing
         >>> from cppyythonizations.util import filtered
-        >>> cppyy.py.add_pythonizations(filtered("tuple<int, float>")(enable_tuple_printing), "std")
-        >>> cppyy.py.add_pythonizations(filtered("tuple<int, float>")(enable_tuple_printing), "std")
+        >>> cppyy.py.add_pythonization(filtered("tuple<int, float>")(enable_tuple_printing), "std")
+        >>> cppyy.py.add_pythonization(filtered("tuple<int, float>")(enable_tuple_printing), "std")
         >>> cppyy.gbl.std.tuple[int, float](1, 2)
         (1, 2.0)
 
@@ -82,7 +82,7 @@ def enable_tuple_indexing(proxy, name):
         >>> import cppyy
         >>> from cppyythonizations.tuple import enable_tuple_indexing
         >>> from cppyythonizations.util import filtered
-        >>> cppyy.py.add_pythonizations(filtered("tuple<string, string>")(enable_tuple_indexing), "std")
+        >>> cppyy.py.add_pythonization(filtered("tuple<string, string>")(enable_tuple_indexing), "std")
         >>> t = cppyy.gbl.std.tuple[str, str]("a", "b")
         >>> t[0]
         'a'
@@ -97,7 +97,7 @@ def enable_tuple_indexing(proxy, name):
         >>> len(t)
         2
         >>> t[::2]
-        ('a')
+        ('a',)
 
     """
     def getitem(self, key):
@@ -129,10 +129,10 @@ def add_tuple_pythonizations():
 
         >>> import re
         >>> import cppyy
-        >>> from cppyythonizations.vector import add_tuple_pythonizations
+        >>> from cppyythonizations.tuple import add_tuple_pythonizations
         >>> from cppyythonizations.printing import enable_pretty_printing
         >>> add_tuple_pythonizations()
-        >>> cppyy.py.add_pythonizations(filtered(re.compile("tuple<.*>"))(enable_pretty_printing), "std")
+        >>> cppyy.py.add_pythonization(filtered(re.compile("tuple<.*>"))(enable_pretty_printing), "std")
         >>> cppyy.gbl.std.tuple[int, str](1, "x")
         (1, 'x')
         >>> _[1]
