@@ -24,7 +24,7 @@ try:
 except KeyboardInterrupt:
   sys.exit(1)
 
-sys.path.insert(0, 'recipe/snippets/rever')
+sys.path.insert(0, 'tools/rever')
 
 import dist
 
@@ -47,6 +47,7 @@ $VERSION_BUMP_PATTERNS = [
 
 $CHANGELOG_FILENAME = 'ChangeLog'
 $CHANGELOG_TEMPLATE = 'TEMPLATE.rst'
+$CHANGELOG_NEWS = 'doc/news'
 $PUSH_TAG_REMOTE = 'git@github.com:flatsurf/cppyythonizations.git'
 
 $GITHUB_ORG = 'flatsurf'
