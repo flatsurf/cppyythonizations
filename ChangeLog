@@ -4,6 +4,19 @@ cppyythonizations Change Log
 
 .. current developments
 
+v1.1.1
+====================
+
+**Changed:**
+
+* use GitHub Actions for CI
+
+**Fixed:**
+
+* fixed errors in doctests for tuple and vector pythonizations
+
+
+
 v1.1.0
 ====================
 
