@@ -1,6 +1,3 @@
-[submodule "recipe/snippets"]
-	path = recipe/snippets
-	url = https://github.com/flatsurf/conda-recipes
 [submodule "src/external/cereal"]
 	path = src/external/cereal
 	url = https://github.com/flatsurf/cereal.git

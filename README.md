@@ -1,6 +1,4 @@
-[![Build Status](https://dev.azure.com/flatsurf/conda/_apis/build/status/flatsurf.cppyythonizations?branchName=master)](https://dev.azure.com/flatsurf/conda/_build/latest?definitionId=7&branchName=master)
-![Windows disabled](https://img.shields.io/badge/Windows-disabled-lightgrey.svg)
-![ppc64le disabled](https://img.shields.io/badge/ppc64le-disabled-lightgrey.svg)
+![Test](https://github.com/flatsurf/cppyythonizations/workflows/Test/badge.svg)
 
 A collection of [Pythonizations](https://cppyy.readthedocs.io/en/latest/pythonizations.html) for [cppyy](https://cppyy.readthedocs.io/en/latest/index.html).
 
@@ -54,11 +52,10 @@ conda. Download and install [Miniconda](https://conda.io/miniconda.html), then
 run
 
 ```
-conda config --add channels conda-forge
-conda create -n cppyythonizations-build cppyy setuptools pytest gmp boost-cpp
+conda create -n cppyythonizations-build
+conda env update -n cppyythonizations-build -f environment.yml
 conda activate cppyythonizations-build
 git clone --recurse-submodules https://github.com/flatsurf/cppyythonizations.git
-cd cppyythonizations
 ./bootstrap
 ./configure --prefix="$CONDA_PREFIX"
 make

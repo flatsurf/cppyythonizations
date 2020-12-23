@@ -1,24 +1,18 @@
 {% set version = '1.1.0' %}
 {% set build_number = '0' %}
-{% set action = action or 'release' %}
-{% set py = _python | replace('*', '') | replace(' ', '') | replace('.', '') %}
-{% set test_requirements = action in ["test", "coverage", "benchmark"] %}
 
 package:
   name: cppyythonizations
   version: {{ version }}
 
 source:
-  git_url: {{ environ.get('FEEDSTOCK_ROOT', '..') }}
+  path: ../
 
 build:
   number: {{ build_number }}
   string: py{{ py }}_{{ build_number }}
   # cppyy is not available on Windows
   skip: True  # [win]
-{%- if action in ["coverage", "style"] %}
-  skip: True  # [not linux]
-{%- endif %}
 
 requirements:
   build:
@@ -26,40 +20,19 @@ requirements:
     - automake
     - coreutils
     - {{ compiler('cxx') }}
-{%- if action == "style" %}
-    - clangdev ==10.0.1
-{%- endif %}
   host:
-    - python {{ _python }}
+    - python
     - setuptools
-{%- if test_requirements %}
-    - pytest
-    - ruamel.yaml
-    - cppyy
-    - boost-cpp
-    - gmp
-    - valgrind >=3.15.0  # [linux]
-{%- endif %}
   run:
-    - python {{ _python }}
+    - python
     - cppyy
 
-{%- if action == "release" %}
 test:
   imports:
     - cppyythonizations
-{%- endif %}
 
 about:
   home: https://github.com/flatsurf/cppyythonizations
   license: MIT
   license_file: COPYING
   summary: Common Pythonizations for cppyy
-
-extra:
-  recipe-maintainers:
-    - saraedum
-    - videlec
-  variables:
-    action: {{ action }}
-    job: {{ job }}

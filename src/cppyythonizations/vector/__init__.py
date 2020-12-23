@@ -58,9 +58,9 @@ def enable_list_printing(proxy, name):
         >>> import cppyy
         >>> from cppyythonizations.printing import enable_list_printing, enable_pretty_printing
         >>> from cppyythonizations.util import filtered
-        >>> cppyy.py.add_pythonizations(filtered("set<int>")(enable_list_printing), "std")
-        >>> cppyy.py.add_pythonizations(filtered("set<int>")(enable_pretty_printing), "std")
-        >>> cppyy.gbl.std.set[int]()
+        >>> cppyy.py.add_pythonization(filtered("set<long>")(enable_list_printing), "std")
+        >>> cppyy.py.add_pythonization(filtered("set<long>")(enable_pretty_printing), "std")
+        >>> cppyy.gbl.std.set['long']()
         []
 
     """
@@ -74,12 +74,13 @@ def add_vector_pythonizations():
 
         >>> import re
         >>> import cppyy
+        >>> from cppyythonizations.util import filtered
         >>> from cppyythonizations.vector import add_vector_pythonizations
         >>> from cppyythonizations.printing import enable_pretty_printing
         >>> add_vector_pythonizations()
-        >>> cppyy.py.add_pythonizations(filtered(re.compile("vector<.*>"))(enable_pretty_printing), "std")
-        >>> cppyy.gbl.std.vector[int]([1, 2, 3])
-        []
+        >>> cppyy.py.add_pythonization(filtered(re.compile("vector<.*>"))(enable_pretty_printing), "std")
+        >>> cppyy.gbl.std.vector['long']([1, 2, 3])
+        [1, 2, 3]
 
     """
     cppyy.py.add_pythonization(filtered(re.compile("vector<.*>"))(enable_list_printing), "std")

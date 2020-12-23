@@ -1,0 +1,20 @@
+# This file lists the dependencies needed to build and test all of cppyythonizations.
+# Create a conda environment with these dependencies preinstalled with:
+# conda env create -f environment.yml
+# conda env update -n cppyythonizations-build -f environment.yml
+name: cppyythonizations-build
+channels:
+  - flatsurf
+  - conda-forge
+  - defaults
+dependencies:
+  - automake
+  - boost-cpp
+  - cppyy
+  - gmp
+  - libtool
+  - make
+  - pytest
+  - python
+  - ruamel.yaml
+  - setuptools

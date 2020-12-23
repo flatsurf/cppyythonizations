@@ -85,7 +85,7 @@ def filtered(filter=lambda proxy, name: True):
 
     Filter with a predicate::
 
-        >>> cppyy.py.add_pythonization(filtered(lambda proxy, name: len(name) %2 == 0)(printer))
+        >>> cppyy.py.add_pythonization(filtered(lambda proxy, name: name == 'PythonizedStruct')(printer))
         >>> cppyy.cppdef(r'''
         ... struct PythonizedStruct {};
         ... struct NotPythonizedStruct {};
