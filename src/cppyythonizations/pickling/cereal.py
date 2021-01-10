@@ -647,7 +647,7 @@ def enable_cereal(proxy, name, headers=[], yaml_tag=None):
         ptr = self.__smartptr__()
 
         cereal = _load_headers(headers).serialize[type(ptr or self)](ptr or self)
-        cereal = json.loads(cereal)
+        cereal = json.loads(bytes(cereal))
         cereal = cereal["cereal"]
 
         assert not isinstance(cereal, dict) or SMARTPTR_KEY not in cereal, "%s has a special meaning in serialization and may not be used in cereal::make_nvp"%(SMARTPTR_KEY,)
