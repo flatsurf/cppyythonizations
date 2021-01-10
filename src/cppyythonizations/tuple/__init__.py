@@ -8,7 +8,7 @@ EXAMPLES::
     >>> add_tuple_pythonizations()
     >>> t = cppyy.gbl.std.tuple[int, str, float](13, "x", 3.7)
     >>> str(t)
-    "(13, 'x', 3.7...)"
+    "(13, b'x', 3.7...)"
 
 Note that this only changes `__str__`, if you also want tuples to print as
 Python tuples in a Python prompt, you need to `enable_pretty_printing` from
@@ -85,19 +85,19 @@ def enable_tuple_indexing(proxy, name):
         >>> cppyy.py.add_pythonization(filtered("tuple<string, string>")(enable_tuple_indexing), "std")
         >>> t = cppyy.gbl.std.tuple[str, str]("a", "b")
         >>> t[0]
-        'a'
+        b'a'
         >>> t[1]
-        'b'
+        b'b'
         >>> t[2]
         Traceback (most recent call last):
         ...
         IndexError: tuple index out of range
         >>> list(t)
-        ['a', 'b']
+        [b'a', b'b']
         >>> len(t)
         2
         >>> t[::2]
-        ('a',)
+        (b'a',)
 
     """
     def getitem(self, key):
@@ -134,9 +134,9 @@ def add_tuple_pythonizations():
         >>> add_tuple_pythonizations()
         >>> cppyy.py.add_pythonization(filtered(re.compile("tuple<.*>"))(enable_pretty_printing), "std")
         >>> cppyy.gbl.std.tuple[int, str](1, "x")
-        (1, 'x')
+        (1, b'x')
         >>> _[1]
-        'x'
+        b'x'
 
     """
     cppyy.py.add_pythonization(filtered(re.compile("tuple<.*>"))(enable_tuple_printing), "std")
