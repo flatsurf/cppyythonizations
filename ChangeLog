@@ -4,6 +4,16 @@ cppyythonizations Change Log
 
 .. current developments
 
+v1.1.2
+====================
+
+**Fixed:**
+
+* adapt serialization to changes in cppyy 1.9.0
+* only run GitHub workflows once for master but not for pushes to tags.
+
+
+
 v1.1.1
 ====================
 
