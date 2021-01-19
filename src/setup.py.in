@@ -12,13 +12,16 @@ class vpath_egg_info(egg_info):
 
 setup(
     name = 'cppyythonizations',
+    author = 'Julian Rüth',
+    author_email = 'julian.rueth@fsfe.org',
     version = '@PACKAGE_VERSION@',
+    url = 'https://github.com/flatsurf/cppyythonizations',
     packages = ['cppyythonizations', 'cppyythonizations.pickling', 'cppyythonizations.util', 'cppyythonizations.operators', 'cppyythonizations.vector', 'cppyythonizations.tuple', 'cppyythonizations.printing'],
     license = 'MIT',
     install_requires=[
         'cppyy'
     ],
-    long_description = open('@abs_top_srcdir@/README.md').read(),
+    long_description = "A collection of Pythonizations for cppyy",
     include_package_data=True,
     cmdclass={ 'egg_info': vpath_egg_info },
     package_dir={ "": os.path.relpath('@abs_top_srcdir@/src/') },

@@ -7,8 +7,7 @@ reusable extensions such as Python pickling of C++ classes.
 
 ## Current Release Info
 
-We build and release this package with every push to the master branch. These releases are considered unstable and highly
-experimental. There are no stable releases yet.
+We release this package very frequently, typically with most pushes to the master branch.
 
 | Name | Downloads | Version | Platforms |
 | --- | --- | --- | --- |
@@ -22,6 +21,12 @@ You can install this package with conda. Download and install [Miniconda](https:
 conda config --add channels conda-forge
 conda create -n cppyy -c flatsurf cppyy cppyythonizations
 conda activate cppyy
+```
+
+## Install with pip
+
+```
+pip install cppyythonizations
 ```
 
 ## Build from the Source Code Repository
@@ -52,12 +57,13 @@ conda. Download and install [Miniconda](https://conda.io/miniconda.html), then
 run
 
 ```
+git clone --recurse-submodules https://github.com/flatsurf/cppyythonizations.git
+cd cppyythonizations
 conda create -n cppyythonizations-build
 conda env update -n cppyythonizations-build -f environment.yml
 conda activate cppyythonizations-build
-git clone --recurse-submodules https://github.com/flatsurf/cppyythonizations.git
 ./bootstrap
-./configure --prefix="$CONDA_PREFIX"
+./configure
 make
 ```
 
@@ -72,7 +78,7 @@ git clone --recurse-submodules https://github.com/flatsurf/cppyythonizations.git
 cd cppyythonizations
 conda activate root
 conda config --add channels conda-forge
-conda config --add channels flatsurf # if you want to pull in the latest version of dependencies
+conda config --add channels flatsurf
 conda install conda-build conda-forge-ci-setup=2
 export FEEDSTOCK_ROOT=`pwd`
 export RECIPE_ROOT=${FEEDSTOCK_ROOT}/recipe

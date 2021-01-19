@@ -18,4 +18,4 @@ CLEANFILES = setup.py MANIFEST.in
 $(builddir)/setup.py: $(srcdir)/setup.py.in Makefile
 	sed -e 's,[@]abs_top_srcdir[@],$(abs_top_srcdir),g' -e 's,[@]PACKAGE_VERSION[@],$(PACKAGE_VERSION),g' < $< > $@
 $(builddir)/MANIFEST.in: $(srcdir)/MANIFEST.in.in Makefile
-	sed -e 's,[@]srcdir[@],$(srcdir),g' < $< > $@
+	sed -e 's,[@]srcdir[@],'`realpath --relative-to=$(builddir) $(srcdir)`',g' < $< > $@

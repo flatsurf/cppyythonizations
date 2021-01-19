@@ -1,3 +1,5 @@
 graft @srcdir@/cppyythonizations/include
 include @srcdir@/cppyythonizations/pickling/cereal.hpp
-include @srcdir@/../COPYING
+graft @srcdir@/../COPYING
+global-exclude __pycache__
+global-exclude *.py[cod]
