@@ -4,6 +4,15 @@ cppyythonizations Change Log
 
 .. current developments
 
+v1.1.3
+====================
+
+**Added:**
+
+* add package to PyPI so we can `pip install cppyythonizations`
+
+
+
 v1.1.2
 ====================
 
