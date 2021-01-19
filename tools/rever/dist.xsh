@@ -22,47 +22,25 @@
 # SOFTWARE.
 # ********************************************************************
 
-import sys
+from rever.activity import Activity
 
-try:
-  input("Are you sure you are on the master branch which is identical to origin/master? [ENTER]")
-except KeyboardInterrupt:
-  sys.exit(1)
+class AutotoolsDist(Activity):
+    def __init__(self, **kwargs):
+        super().__init__()
+        self.name = "dist"
+        self.desc = "Creates a source tarball with make dist"
+        self.requires = {"commands": {"make": "make"}}
 
-sys.path.insert(0, 'tools/rever')
-
-import dist
-import autopypi
-
-$PROJECT = 'cppyythonizations'
-
-$ACTIVITIES = [
-    'version_bump',
-    'changelog',
-    'dist',
-    'autopypi',
-    'tag',
-    'push_tag',
-    'ghrelease',
-]
-
-$VERSION_BUMP_PATTERNS = [
-    ('configure.ac', r'AC_INIT', r'AC_INIT([cppyythonizations], [$VERSION], [julian.rueth@fsfe.org])'),
-    ('recipe/meta.yaml', r"\{% set version =", r"{% set version = '$VERSION' %}"),
-    ('recipe/meta.yaml', r"\{% set build_number =", r"{% set build_number = '0' %}"),
-]
-
-$CHANGELOG_FILENAME = 'ChangeLog'
-$CHANGELOG_TEMPLATE = 'TEMPLATE.rst'
-$CHANGELOG_NEWS = 'doc/news'
-$PUSH_TAG_REMOTE = 'git@github.com:flatsurf/cppyythonizations.git'
-
-$GITHUB_ORG = 'flatsurf'
-$GITHUB_REPO = 'cppyythonizations'
-
-$PYPI_BUILD_COMMANDS = []
-$PYPI_NAME = "cppyythonizations"
-
-$AUTOPYPI_ROOT = "src"
-
-$GHRELEASE_ASSETS = ['cppyythonizations-' + $VERSION + '.tar.gz']
+    def __call__(self):
+        from tempfile import TemporaryDirectory
+        from xonsh.dirstack import DIRSTACK
+        with TemporaryDirectory() as tmp:
+            ./bootstrap
+            pushd @(tmp)
+            @(DIRSTACK[-1])/configure
+            make dist
+            mv *.tar.gz @(DIRSTACK[-1])
+            popd
+        return True
+    
+$DAG['dist'] = AutotoolsDist()

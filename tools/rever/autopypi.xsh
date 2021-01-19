@@ -1,7 +1,7 @@
 # ********************************************************************
 #  This file is part of cppyythonizations.
 #
-#        Copyright (C) 2020 Julian Rüth
+#        Copyright (C) 2021 Julian Rüth
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -22,47 +22,32 @@
 # SOFTWARE.
 # ********************************************************************
 
-import sys
+from rever.activity import Activity
 
-try:
-  input("Are you sure you are on the master branch which is identical to origin/master? [ENTER]")
-except KeyboardInterrupt:
-  sys.exit(1)
+class AutoPyPI(Activity):
+    def __init__(self, **kwargs):
+        super().__init__(
+          name="autopypi",
+          desc = "Run setup.py in an autoconfiscated Python package and upload a bdist wheel to PyPI",
+          requires = {"commands": {"make": "make", "twine": "twine"}},
+          func = self._func,
+        )
 
-sys.path.insert(0, 'tools/rever')
+    def _func(self, root=".", commands=["bdist_wheel"]):
+        from tempfile import TemporaryDirectory
+        from xonsh.dirstack import DIRSTACK
+        with TemporaryDirectory() as tmp:
+            ./bootstrap
+            pushd @(tmp)
+            @(DIRSTACK[-1])/configure
+            make
 
-import dist
-import autopypi
+            pushd @(root)
+            $PYTHON setup.py @(commands)
+            twine upload --sign dist/*
+            popd
 
-$PROJECT = 'cppyythonizations'
-
-$ACTIVITIES = [
-    'version_bump',
-    'changelog',
-    'dist',
-    'autopypi',
-    'tag',
-    'push_tag',
-    'ghrelease',
-]
-
-$VERSION_BUMP_PATTERNS = [
-    ('configure.ac', r'AC_INIT', r'AC_INIT([cppyythonizations], [$VERSION], [julian.rueth@fsfe.org])'),
-    ('recipe/meta.yaml', r"\{% set version =", r"{% set version = '$VERSION' %}"),
-    ('recipe/meta.yaml', r"\{% set build_number =", r"{% set build_number = '0' %}"),
-]
-
-$CHANGELOG_FILENAME = 'ChangeLog'
-$CHANGELOG_TEMPLATE = 'TEMPLATE.rst'
-$CHANGELOG_NEWS = 'doc/news'
-$PUSH_TAG_REMOTE = 'git@github.com:flatsurf/cppyythonizations.git'
-
-$GITHUB_ORG = 'flatsurf'
-$GITHUB_REPO = 'cppyythonizations'
-
-$PYPI_BUILD_COMMANDS = []
-$PYPI_NAME = "cppyythonizations"
-
-$AUTOPYPI_ROOT = "src"
-
-$GHRELEASE_ASSETS = ['cppyythonizations-' + $VERSION + '.tar.gz']
+            popd
+        return True
+    
+$DAG['autopypi'] = AutoPyPI()
