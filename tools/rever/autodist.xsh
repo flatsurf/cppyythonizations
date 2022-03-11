@@ -1,7 +1,7 @@
 # ********************************************************************
 #  This file is part of cppyythonizations.
 #
-#        Copyright (C) 2020 Julian Rüth
+#        Copyright (C) 2020-2022 Julian Rüth
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -43,4 +43,4 @@ class AutotoolsDist(Activity):
             popd
         return True
     
-$DAG['dist'] = AutotoolsDist()
+$DAG['autodist'] = AutotoolsDist()

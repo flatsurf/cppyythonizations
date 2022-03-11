@@ -137,7 +137,7 @@ setup(
     name='cppyythonizations',
     author='Julian Rüth',
     author_email='julian.rueth@fsfe.org',
-    version='1.1.3',
+    version='1.2.0',
     url='https://github.com/flatsurf/cppyythonizations',
     packages=['cppyythonizations', 'cppyythonizations.pickling', 'cppyythonizations.util', 'cppyythonizations.operators', 'cppyythonizations.vector', 'cppyythonizations.tuple', 'cppyythonizations.printing', 'cppyythonizations.boost.type_erasure'],
     license='MIT',

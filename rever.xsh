@@ -31,7 +31,7 @@ except KeyboardInterrupt:
 
 sys.path.insert(0, 'tools/rever')
 
-import dist
+import autodist
 import autopypi
 
 $PROJECT = 'cppyythonizations'
@@ -39,7 +39,7 @@ $PROJECT = 'cppyythonizations'
 $ACTIVITIES = [
     'version_bump',
     'changelog',
-    'dist',
+    'autodist',
     'autopypi',
     'tag',
     'push_tag',
