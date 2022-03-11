@@ -151,7 +151,7 @@ setup(
         'sdist': MakeDist,
     },
     package_dir={
-        # In VPATH builds, search pyeantic relative to this setup.py file.
+        # In VPATH builds, search cppyythonizations relative to this setup.py file.
         '': "src" if os.path.relpath(os.path.dirname(__file__) or ".") == "." else os.path.join(os.path.relpath(os.path.dirname(__file__)), "src")
     },
 )
