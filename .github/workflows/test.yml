@@ -31,11 +31,10 @@ jobs:
           sudo apt install libc6-dbg valgrind
         if: ${{ matrix.target == 'check-valgrind' }}
       - uses: conda-incubator/setup-miniconda@v2
-        with: { mamba-version: "*", channels: "flatsurf,conda-forge", channel-priority: true }
+        with: { mamba-version: "*", channels: "flatsurf,conda-forge", channel-priority: true, python-version: "${{matrix.python}}" }
       - name: install dependencies
         shell: bash -l {0}
         run: |
-          mamba install --yes --quiet python=${{ matrix.python }}
           mamba env update --quiet -n test -f environment.yml
           conda list
       - name: make ${{ matrix.target }}
