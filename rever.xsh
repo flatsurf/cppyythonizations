@@ -1,7 +1,7 @@
 # ********************************************************************
 #  This file is part of cppyythonizations.
 #
-#        Copyright (C) 2020 Julian Rüth
+#        Copyright (C) 2020-2022 Julian Rüth
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -50,6 +50,7 @@ $VERSION_BUMP_PATTERNS = [
     ('configure.ac', r'AC_INIT', r'AC_INIT([cppyythonizations], [$VERSION], [julian.rueth@fsfe.org])'),
     ('recipe/meta.yaml', r"\{% set version =", r"{% set version = '$VERSION' %}"),
     ('recipe/meta.yaml', r"\{% set build_number =", r"{% set build_number = '0' %}"),
+    ('setup.py', r"    version=", "    version='$VERSION',"),
 ]
 
 $CHANGELOG_FILENAME = 'ChangeLog'
