@@ -150,5 +150,8 @@ setup(
         'egg_info': EggInfoVPath,
         'sdist': MakeDist,
     },
-    package_dir={'': "src"},
+    package_dir={
+        # In VPATH builds, search pyeantic relative to this setup.py file.
+        '': "src" if os.path.relpath(os.path.dirname(__file__) or ".") == "." else os.path.join(os.path.relpath(os.path.dirname(__file__)), "src")
+    },
 )
