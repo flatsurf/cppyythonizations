@@ -19,4 +19,4 @@ uninstall-local:
 clean-local:
 	-rm -rf cppyythonizations/__pycache__ cppyythonizations.egg-info build .pytest_cache
 
-EXTRA_DIST = cppyythonizations/__init__.py cppyythonizations/include cppyythonizations/pickling/__init__.py cppyythonizations/pickling/cereal.py cppyythonizations/pickling/cereal.hpp external/cereal/include/cereal cppyythonizations/util/__init__.py cppyythonizations/operators/__init__.py cppyythonizations/operators/order.py cppyythonizations/operators/arithmetic.py cppyythonizations/printing/__init__.py cppyythonizations/vector/__init__.py cppyythonizations/tuple/__init__.py
+EXTRA_DIST = cppyythonizations/__init__.py cppyythonizations/include cppyythonizations/pickling/__init__.py cppyythonizations/pickling/cereal.py cppyythonizations/pickling/cereal.hpp external/cereal/include/cereal cppyythonizations/util/__init__.py cppyythonizations/operators/__init__.py cppyythonizations/operators/order.py cppyythonizations/operators/arithmetic.py cppyythonizations/printing/__init__.py cppyythonizations/vector/__init__.py cppyythonizations/tuple/__init__.py cppyythonizations/boost/type_erasure/__init__.py
