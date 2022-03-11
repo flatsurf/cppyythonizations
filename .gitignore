@@ -134,4 +134,7 @@ vgcore.*
 ### Log files
 *.log
 
+# Rever & Distribution
 /rever
+/dist
+/build

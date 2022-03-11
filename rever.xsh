@@ -64,6 +64,4 @@ $GITHUB_REPO = 'cppyythonizations'
 $PYPI_BUILD_COMMANDS = []
 $PYPI_NAME = "cppyythonizations"
 
-$AUTOPYPI_ROOT = "src"
-
 $GHRELEASE_ASSETS = ['cppyythonizations-' + $VERSION + '.tar.gz']

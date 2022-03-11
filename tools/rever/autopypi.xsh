@@ -34,6 +34,9 @@ class AutoPyPI(Activity):
         )
 
     def _func(self, root=".", commands=["bdist_wheel"]):
+        import os.path
+        root = os.path.abspath(root)
+
         from tempfile import TemporaryDirectory
         from xonsh.dirstack import DIRSTACK
         with TemporaryDirectory() as tmp:
