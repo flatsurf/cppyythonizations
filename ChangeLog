@@ -4,6 +4,16 @@ cppyythonizations Change Log
 
 .. current developments
 
+v1.2.1
+====================
+
+**Fixed:**
+
+* Fixed typo in `make uninstall` command.
+* Include `MANIFEST.in` in distributed cppyythonizations tarball.
+
+
+
 v1.2.0
 ====================
 
