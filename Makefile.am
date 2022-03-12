@@ -6,4 +6,4 @@ SUBDIRS = src $(MAYBE_PYTEST)
 
 ACLOCAL_AMFLAGS = -I m4
 
-EXTRA_DIST = README.md setup.py
+EXTRA_DIST = README.md setup.py MANIFEST.in

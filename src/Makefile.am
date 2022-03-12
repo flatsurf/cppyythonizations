@@ -14,8 +14,7 @@ install-exec-local:
 
 uninstall-local:
 	cat $(DESTDIR)$(pythondir)/cppyythonizations/installed_files.txt | xargs rm -rf
-	rm -rf $(DESTDIR)$(pythondir)/cppythonizations
-	rm $(DESTDIR)$(pythondir)/cppyythonizations/installed_files.txt
+	rm -rf $(DESTDIR)$(pythondir)/cppyythonizations
 
 clean-local:
 	-rm -rf cppyythonizations/__pycache__ cppyythonizations.egg-info build .pytest_cache
