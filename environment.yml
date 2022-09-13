@@ -4,7 +4,6 @@
 # conda env update -n cppyythonizations-build -f environment.yml
 name: cppyythonizations-build
 channels:
-  - flatsurf
   - conda-forge
   - defaults
 dependencies:
