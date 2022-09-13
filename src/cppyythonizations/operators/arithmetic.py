@@ -28,7 +28,6 @@ Operators work on instances of this class::
 The original inplace operator can still be called::
 
     >>> demo += demo
-    <cppyy.gbl.doctest.operators.Addable ...>
 
 """
 # ********************************************************************
