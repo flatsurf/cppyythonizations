@@ -4,6 +4,15 @@ cppyythonizations Change Log
 
 .. current developments
 
+v1.2.2
+====================
+
+**Fixed:**
+
+* Do not break inplace operators in `enable_arithmetic`.
+
+
+
 v1.2.1
 ====================
 
