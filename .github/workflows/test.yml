@@ -49,7 +49,7 @@ jobs:
       - name: make check-valgrind
         shell: bash -l {0}
         run: |
-          PYTHONMALLOC=malloc valgrind --show-leak-kinds=definite --log-file=/tmp/valgrind-output python -m pytest -vv --valgrind --valgrind-log=/tmp/valgrind-output
+          PYTHONMALLOC=malloc valgrind --show-leak-kinds=definite --log-file=/tmp/valgrind-output python -m pytest -vv --doctest-modules --valgrind --valgrind-log=/tmp/valgrind-output
         if: ${{ matrix.target == 'check-valgrind' }}
       - uses: flatsurf/actions/show-logs@main
         if: ${{ always() }}
