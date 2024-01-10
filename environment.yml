@@ -17,4 +17,4 @@ dependencies:
   - setuptools
   - pip
   - pip:
-    - python-valgrind
+    - pytest-valgrind
