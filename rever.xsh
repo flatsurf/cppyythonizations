@@ -39,8 +39,7 @@ $PROJECT = 'cppyythonizations'
 $ACTIVITIES = [
     'version_bump',
     'changelog',
-    'autodist',
-    'autopypi',
+    'pypi',
     'tag',
     'push_tag',
     'ghrelease',
