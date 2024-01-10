@@ -5,9 +5,7 @@
 name: cppyythonizations-build
 channels:
   - conda-forge
-  - defaults
 dependencies:
-  - automake
   - boost-cpp
   - cppyy
   - gmp

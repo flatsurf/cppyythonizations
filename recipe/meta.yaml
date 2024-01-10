@@ -15,11 +15,6 @@ build:
   skip: True  # [win]
 
 requirements:
-  build:
-    - libtool
-    - automake
-    - coreutils
-    - {{ compiler('cxx') }}
   host:
     - python
     - setuptools
