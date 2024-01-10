@@ -14,13 +14,13 @@ jobs:
       matrix:
         python: ["3.8", "3.9", "3.10", "3.11"]
         on:
-          - ubuntu-20.04
-          - macos-11.0
+          - ubuntu-22.04
+          - macos-11
         target:
           - check
         include:
           - python: "3.11"
-            on: ubuntu-20.04
+            on: ubuntu-22.04
             target: check-valgrind
     steps:
       - uses: actions/checkout@v2
@@ -55,7 +55,7 @@ jobs:
       - uses: flatsurf/actions/show-logs@main
         if: ${{ always() }}
   distcheck:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v2
         with: { submodules: recursive }
