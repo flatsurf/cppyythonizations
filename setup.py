@@ -1,7 +1,7 @@
 # ********************************************************************
 #  This file is part of cppyythonizations.
 #
-#        Copyright (C) 2020-2022 Julian Rüth
+#        Copyright (C) 2020-2024 Julian Rüth
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -139,7 +139,7 @@ setup(
     author_email='julian.rueth@fsfe.org',
     version='1.2.2',
     url='https://github.com/flatsurf/cppyythonizations',
-    packages=['cppyythonizations', 'cppyythonizations.pickling', 'cppyythonizations.util', 'cppyythonizations.operators', 'cppyythonizations.vector', 'cppyythonizations.tuple', 'cppyythonizations.printing', 'cppyythonizations.boost.type_erasure', 'cppyythonizations.boost.logic'],
+    packages=['cppyythonizations', 'cppyythonizations.pickling', 'cppyythonizations.util', 'cppyythonizations.operators', 'cppyythonizations.vector', 'cppyythonizations.tuple', 'cppyythonizations.printing', 'cppyythonizations.boost.type_erasure', 'cppyythonizations.boost.logic', 'cppyythonizations.include.cereal', 'cppyythonizations.include.cereal.archives', 'cppyythonizations.include.cereal.details', 'cppyythonizations.include.cereal.external', 'cppyythonizations.include.cereal.external.rapidjson', 'cppyythonizations.include.cereal.external.rapidjson.error', 'cppyythonizations.include.cereal.external.rapidjson.internal', 'cppyythonizations.include.cereal.external.rapidjson.msinttypes', 'cppyythonizations.include.cereal.external.rapidxml', 'cppyythonizations.include.cereal.types', 'cppyythonizations.include.cereal.types.concepts'],
     license='MIT',
     install_requires=[
         'cppyy'
