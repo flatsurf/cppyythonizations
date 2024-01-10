@@ -31,8 +31,6 @@ jobs:
         run: |
           sudo apt update
           sudo apt install libc6-dbg valgrind
-
-          pip install python-valgrind
         if: ${{ matrix.target == 'check-valgrind' }}
       - name: install dependencies
         shell: bash -l {0}
