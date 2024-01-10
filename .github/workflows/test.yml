@@ -28,11 +28,12 @@ jobs:
       - uses: conda-incubator/setup-miniconda@v2
         with: { miniforge-variant: "Mambaforge", miniforge-version: "latest", python-version: "${{matrix.python}}" }
       - name: install valgrind and libc debug symbols
+        shell: bash -l {0}
         run: |
           sudo apt update
           sudo apt install libc6-dbg valgrind
 
-          mamba install -y pip
+          mamba install -n test -y pip
           pip install pytest-valgrind
         if: ${{ matrix.target == 'check-valgrind' }}
       - name: install dependencies
