@@ -15,6 +15,3 @@ dependencies:
   - python
   - ruamel.yaml
   - setuptools
-  - pip
-  - pip:
-    - pytest-valgrind
