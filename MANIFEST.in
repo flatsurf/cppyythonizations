@@ -1,0 +1,2 @@
+graft src/cppyythonizations/include
+include src/cppyythonizations/pickling/cereal.hpp
