@@ -39,18 +39,16 @@ $PROJECT = 'cppyythonizations'
 $ACTIVITIES = [
     'version_bump',
     'changelog',
-    'autodist',
-    'autopypi',
+    'pypi',
     'tag',
     'push_tag',
     'ghrelease',
 ]
 
 $VERSION_BUMP_PATTERNS = [
-    ('configure.ac', r'AC_INIT', r'AC_INIT([cppyythonizations], [$VERSION], [julian.rueth@fsfe.org])'),
     ('recipe/meta.yaml', r"\{% set version =", r"{% set version = '$VERSION' %}"),
     ('recipe/meta.yaml', r"\{% set build_number =", r"{% set build_number = '0' %}"),
-    ('setup.py', r"    version=", "    version='$VERSION',"),
+    ('pyproject.toml', r"version =", 'version = "$VERSION"'),
 ]
 
 $CHANGELOG_FILENAME = 'ChangeLog'

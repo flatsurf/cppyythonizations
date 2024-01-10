@@ -1,9 +1,0 @@
-if HAVE_PYTEST
-    MAYBE_PYTEST = test
-endif
-
-SUBDIRS = src $(MAYBE_PYTEST)
-
-ACLOCAL_AMFLAGS = -I m4
-
-EXTRA_DIST = README.md setup.py MANIFEST.in

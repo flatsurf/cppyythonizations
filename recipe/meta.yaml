@@ -13,13 +13,9 @@ build:
   string: py{{ py }}_{{ build_number }}
   # cppyy is not available on Windows
   skip: True  # [win]
+  script: {{ PYTHON }} -m pip install . -vv
 
 requirements:
-  build:
-    - libtool
-    - automake
-    - coreutils
-    - {{ compiler('cxx') }}
   host:
     - python
     - setuptools
