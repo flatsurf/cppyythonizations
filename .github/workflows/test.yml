@@ -40,12 +40,12 @@ jobs:
         run: |
           mamba env update --quiet -n test -f environment.yml
           conda list
-      - name: make ${{ matrix.target }}
+      - name: make check
         shell: bash -l {0}
         run: |
           pytest --doctest-modules -vv
         if: ${{ matrix.target == 'check' }}
-      - name: make ${{ matrix.target }}
+      - name: make check-valgrind
         shell: bash -l {0}
         run: |
           PYTHONMALLOC=malloc valgrind --show-leak-kinds=definite --log-file=/tmp/valgrind-output python -m pytest -vv --valgrind --valgrind-log=/tmp/valgrind-output
