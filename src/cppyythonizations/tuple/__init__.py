@@ -82,7 +82,7 @@ def enable_tuple_indexing(proxy, name):
         >>> import cppyy
         >>> from cppyythonizations.tuple import enable_tuple_indexing
         >>> from cppyythonizations.util import filtered
-        >>> cppyy.py.add_pythonization(filtered("tuple<string,string>")(enable_tuple_indexing), "std")
+        >>> cppyy.py.add_pythonization(filtered("tuple<std::string,std::string>")(enable_tuple_indexing), "std")
         >>> t = cppyy.gbl.std.tuple[str, str]("a", "b")
         >>> t[0]
         b'a'
