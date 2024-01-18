@@ -103,16 +103,27 @@ def filtered(filter=lambda proxy, name: True):
             filter = [filter]
         filters = list(filter)
 
+        # Rewrite strings into regexes that ignore whitespace in C++ type names.
+        # We could also strip whitespace from type names but this would
+        # identity `long long` and longlong which are not the same.
+        def enable_match(filter):
+            if not hasattr(filter, 'match'):
+                import re
+                filter = re.escape(filter)
+                filter = filter.replace(",", ", *")
+                filter = filter.replace(">", " *>")
+                filter = "^" + filter + "$"
+                filter = re.compile(filter)
+            return filter
+
+        filters = [enable_match(filter) for filter in filters]
+
         def filter(proxy, name):
             for filter in filters:
-                if hasattr(filter, 'match'):
-                    if filter.match(name):
-                        return True
-                else:
-                    if filter == name:
-                        return True
+                if filter.match(name):
+                    return True
             return False
-    
+
     def wrap(pythonization):
         def wrapped(proxy, name):
             if filter(proxy, name):
