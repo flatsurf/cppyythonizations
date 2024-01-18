@@ -12,6 +12,10 @@ dependencies:
   - libtool
   - make
   - pytest
+  - pytest-xdist
   - python
   - ruamel.yaml
   - setuptools
+  - pip
+  - pip:
+    - pytest-isolate

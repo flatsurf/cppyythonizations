@@ -44,7 +44,7 @@ jobs:
       - name: make check
         shell: bash -l {0}
         run: |
-          pytest --doctest-modules -vv
+          pytest -n 2 --isolate --doctest-modules -vv
         if: ${{ matrix.target == 'check' }}
       - name: make check-valgrind
         shell: bash -l {0}
@@ -53,6 +53,3 @@ jobs:
         if: ${{ matrix.target == 'check-valgrind' }}
       - uses: flatsurf/actions/show-logs@main
         if: ${{ always() }}
-
-env:
-  MAKEFLAGS: -j2
