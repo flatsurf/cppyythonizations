@@ -44,7 +44,7 @@ jobs:
       - name: make check
         shell: bash -l {0}
         run: |
-          pytest -n 2 --isolate --doctest-modules -vv
+          pytest --isolate --doctest-modules -vv
         if: ${{ matrix.target == 'check' }}
       - name: make check-valgrind
         shell: bash -l {0}

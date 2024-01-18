@@ -12,7 +12,6 @@ dependencies:
   - libtool
   - make
   - pytest
-  - pytest-xdist
   - python
   - ruamel.yaml
   - setuptools
