@@ -14,7 +14,7 @@ various STL containers::
     ... BOOST_TYPE_ERASURE_MEMBER((has_member_empty), empty, 0);
     ... struct EmptyInterface : boost::mpl::vector<
     ...   boost::type_erasure::copy_constructible<>,
-    ...   has_member_empty<bool() const>,
+    ...   has_member_empty<bool() const, boost::type_erasure::_self>,
     ...   boost::type_erasure::typeid_<>,
     ...   boost::type_erasure::relaxed> {};
     ... using any_empty = boost::type_erasure::any<EmptyInterface>;
@@ -34,56 +34,37 @@ This module provides a helper to create such an ``any``::
     >>> from cppyythonizations.boost.type_erasure import make_any
     >>> erased_vector = make_any(cppyy.gbl.any_empty)(v)
 
-In this exmple, cppyy sees the ``empty`` method and can call it directly::
+In this exmple, cppyy sees the ``empty`` method. But with recent versions of boost, it fails to call it directly::
 
     >>> hasattr(erased_vector, 'empty')
     True
     >>> erased_vector.empty()
-    True
-
-However, in more complicated cases, cppyy fails to see such methods::
-
-    >>> cppyy.cppdef(r'''
-    ... BOOST_TYPE_ERASURE_MEMBER((has_member_identity), identity, 1);
+    Traceback (most recent call last):
     ...
-    ... struct IdentityInterface;
-    ...
-    ... using any_identity = boost::type_erasure::any<IdentityInterface>;
-    ...
-    ... struct IdentityInterface : boost::mpl::vector<
-    ...   boost::type_erasure::copy_constructible<>,
-    ...   has_member_identity<any_identity(any_identity)>,
-    ...   boost::type_erasure::typeid_<>,
-    ...   boost::type_erasure::relaxed> {};
-    ...
-    ... struct Identity {
-    ...   any_identity identity(any_identity x) { return x; }
-    ... };
-    ... ''')
-    True
+    TypeError: ...::empty must be called with a ...
 
-    >>> identity = cppyy.gbl.Identity()
-    >>> erased_identity = make_any(cppyy.gbl.any_identity)(identity)
-    >>> hasattr(erased_identity, "identity")
-    False
-
-These methods can be explicitly made visible::
+We need to explicitly make most methods visible, so before creating the any
+type in Python, we need to make sure it gets patched::
 
     >>> from cppyythonizations.util import filtered
     >>> from cppyythonizations.boost.type_erasure import expose
-    >>> cppyy.py.add_pythonization(filtered("any<IdentityInterface2,boost::type_erasure::_self>")(expose("identity")), "boost::type_erasure")
+    >>> cppyy.py.add_pythonization(filtered("any<SizeInterface,boost::type_erasure::_self>")(expose("size")), "boost::type_erasure")
 
     >>> cppyy.cppdef(r'''
-    ... struct IdentityInterface2 : IdentityInterface {};
-    ... using any_identity2 = boost::type_erasure::any<IdentityInterface2>;
+    ... #include <boost/type_erasure/member.hpp>
+    ... BOOST_TYPE_ERASURE_MEMBER((has_member_size), size, 0);
+    ... struct SizeInterface : boost::mpl::vector<
+    ...   boost::type_erasure::copy_constructible<>,
+    ...   has_member_size<size_t() const>,
+    ...   boost::type_erasure::typeid_<>,
+    ...   boost::type_erasure::relaxed> {};
+    ... using any_size = boost::type_erasure::any<SizeInterface>;
     ... ''')
     True
 
-    >>> erased_identity2 = make_any(cppyy.gbl.any_identity2)(identity)
-    >>> hasattr(erased_identity2, "identity")
-    True
-    >>> erased_identity2.identity(erased_identity)
-    <cppyy.gbl.boost.type_erasure.any<IdentityInterface,boost::type_erasure::_self> object at 0x...
+    >>> sized = make_any(cppyy.gbl.any_size)(cppyy.gbl.std.vector[int]())
+    >>> sized.size()
+    0
 
 """
 # ********************************************************************
@@ -142,7 +123,7 @@ def make_any(type):
         True
         >>> cppyy.cppdef(r'''
         ... #include <boost/type_erasure/member.hpp>
-        ... BOOST_TYPE_ERASURE_MEMBER((has_member_size), empty, 0);
+        ... BOOST_TYPE_ERASURE_MEMBER((has_member_size), size, 0);
         ... struct SizeInterface : boost::mpl::vector<
         ...   boost::type_erasure::copy_constructible<>,
         ...   has_member_size<size_t() const>,

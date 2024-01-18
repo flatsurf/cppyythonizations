@@ -6,7 +6,7 @@ name: cppyythonizations-build
 channels:
   - conda-forge
 dependencies:
-  - boost-cpp
+  - libboost-headers
   - cppyy
   - gmp
   - libtool
