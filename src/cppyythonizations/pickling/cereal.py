@@ -624,7 +624,7 @@ def enable_cereal(proxy, name, headers=[], yaml_tag=None):
 
     Complex standard types can also be serialized::
 
-        >>> cppyy.py.add_pythonization(filtered("map<std::set<int>,std::map<int,std::string>>")(enable_cereal), "std")
+        >>> cppyy.py.add_pythonization(filtered("map<std::set<int>,std::map<int,std::string> >")(enable_cereal), "std")
         >>> m = cppyy.gbl.std.map[cppyy.gbl.std.set[int], cppyy.gbl.std.map[int, str]]()
         >>> m[cppyy.gbl.std.set[int]([1, 2, 3])][1337] = "A"
         >>> loadsdumps(m)

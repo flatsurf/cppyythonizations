@@ -8,6 +8,7 @@ various STL containers::
 
     >>> import cppyy
     >>> cppyy.include("boost/type_erasure/any.hpp")
+    True
     >>> cppyy.cppdef(r'''
     ... #include <boost/type_erasure/member.hpp>
     ... BOOST_TYPE_ERASURE_MEMBER((has_member_empty), empty, 0);
@@ -18,6 +19,7 @@ various STL containers::
     ...   boost::type_erasure::relaxed> {};
     ... using any_empty = boost::type_erasure::any<EmptyInterface>;
     ... ''')
+    True
 
 Currently, cppyy fails to create such an ``any`` directly::
 
@@ -35,6 +37,7 @@ This module provides a helper to create such an ``any``::
 In this exmple, cppyy sees the ``empty`` method and can call it directly::
 
     >>> hasattr(erased_vector, 'empty')
+    True
     >>> erased_vector.empty()
     True
 
@@ -57,6 +60,7 @@ However, in more complicated cases, cppyy fails to see such methods::
     ...   any_identity identity(any_identity x) { return x; }
     ... };
     ... ''')
+    True
 
     >>> identity = cppyy.gbl.Identity()
     >>> erased_identity = make_any(cppyy.gbl.any_identity)(identity)
@@ -73,6 +77,7 @@ These methods can be explicitly made visible::
     ... struct IdentityInterface2 : IdentityInterface {};
     ... using any_identity2 = boost::type_erasure::any<IdentityInterface2>;
     ... ''')
+    True
 
     >>> erased_identity2 = make_any(cppyy.gbl.any_identity2)(identity)
     >>> hasattr(erased_identity2, "identity")
@@ -134,18 +139,21 @@ def make_any(type):
 
         >>> import cppyy
         >>> cppyy.include("boost/type_erasure/any.hpp")
+        True
         >>> cppyy.cppdef(r'''
         ... #include <boost/type_erasure/member.hpp>
-        ... BOOST_TYPE_ERASURE_MEMBER((has_member_empty), empty, 0);
-        ... struct EmptyInterface : boost::mpl::vector<
+        ... BOOST_TYPE_ERASURE_MEMBER((has_member_size), empty, 0);
+        ... struct SizeInterface : boost::mpl::vector<
         ...   boost::type_erasure::copy_constructible<>,
-        ...   has_member_empty<bool() const>,
+        ...   has_member_size<size_t() const>,
         ...   boost::type_erasure::typeid_<>,
         ...   boost::type_erasure::relaxed> {};
-        ... using any_empty = boost::type_erasure::any<EmptyInterface>;
+        ... using any_size = boost::type_erasure::any<SizeInterface>;
         ... ''')
+        True
 
-        >>> make_any(cppyy.gbl.any_empty)(cppyy.gbl.std.vector[int]())
+        >>> make_any(cppyy.gbl.any_size)(cppyy.gbl.std.vector[int]())
+        <cppyy.gbl.boost.type_erasure.any<SizeInterface,boost::type_erasure::_self> object at 0x...
 
     """
     return cppyy.gbl.cppyythonizations.boost.type_erasure.any[type].make
@@ -179,6 +187,7 @@ def expose(name, cpp_name=None):
         ...   bool operator==(const EqualityComparable& rhs) const { return this == &rhs; }
         ... };
         ... ''')
+        True
 
         >>> from cppyythonizations.util import filtered
         >>> from cppyythonizations.boost.type_erasure import expose

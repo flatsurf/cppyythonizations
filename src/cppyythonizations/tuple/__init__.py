@@ -49,6 +49,7 @@ import cppyy
 
 from ..util import filtered
 
+
 def enable_tuple_printing(proxy, name):
     r"""
     Print proxy objects as Python tuples.
@@ -59,10 +60,9 @@ def enable_tuple_printing(proxy, name):
         >>> from cppyythonizations.tuple import enable_tuple_printing
         >>> from cppyythonizations.printing import enable_pretty_printing
         >>> from cppyythonizations.util import filtered
-        >>> cppyy.py.add_pythonization(filtered("tuple<int, float>")(enable_tuple_printing), "std")
-        >>> cppyy.py.add_pythonization(filtered("tuple<int, float>")(enable_tuple_printing), "std")
-        >>> cppyy.gbl.std.tuple[int, float](1, 2)
-        (1, 2.0)
+        >>> cppyy.py.add_pythonization(filtered("tuple<int,float>")(enable_tuple_printing), "std")
+        >>> str(cppyy.gbl.std.tuple[int, float](1, 2))
+        '(1, 2.0)'
 
     """
     proxy.__str__ = lambda self: str(tuple(self))
@@ -82,7 +82,7 @@ def enable_tuple_indexing(proxy, name):
         >>> import cppyy
         >>> from cppyythonizations.tuple import enable_tuple_indexing
         >>> from cppyythonizations.util import filtered
-        >>> cppyy.py.add_pythonization(filtered("tuple<string, string>")(enable_tuple_indexing), "std")
+        >>> cppyy.py.add_pythonization(filtered("tuple<string,string>")(enable_tuple_indexing), "std")
         >>> t = cppyy.gbl.std.tuple[str, str]("a", "b")
         >>> t[0]
         b'a'
