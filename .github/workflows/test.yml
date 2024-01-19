@@ -36,8 +36,9 @@ jobs:
         shell: bash -l {0}
         run: |
           sudo apt update
-          sudo apt install libc6-dbg valgrind
+          sudo apt install libc6-dbg
 
+          mamba install -y valgrind
           pip install pytest-valgrind
         if: ${{ matrix.target == 'check-valgrind' }}
       - name: make check
