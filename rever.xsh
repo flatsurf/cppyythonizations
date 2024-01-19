@@ -29,12 +29,18 @@ try:
 except KeyboardInterrupt:
   sys.exit(1)
 
+from rever.activities.command import command
+
+command('build', 'python -m build')
+command('twine', 'twine upload dist/*')
+
 $PROJECT = 'cppyythonizations'
 
 $ACTIVITIES = [
     'version_bump',
     'changelog',
-    'pypi',
+    'build',
+    'twine',
     'tag',
     'push_tag',
     'ghrelease',
@@ -54,7 +60,4 @@ $PUSH_TAG_REMOTE = 'git@github.com:flatsurf/cppyythonizations.git'
 $GITHUB_ORG = 'flatsurf'
 $GITHUB_REPO = 'cppyythonizations'
 
-$PYPI_BUILD_COMMANDS = []
-$PYPI_NAME = "cppyythonizations"
-
-$GHRELEASE_ASSETS = ['cppyythonizations-' + $VERSION + '.tar.gz']
+$GHRELEASE_ASSETS = ['dist/cppyythonizations-' + $VERSION + '.tar.gz']
