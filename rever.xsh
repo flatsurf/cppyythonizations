@@ -29,11 +29,6 @@ try:
 except KeyboardInterrupt:
   sys.exit(1)
 
-sys.path.insert(0, 'tools/rever')
-
-import autodist
-import autopypi
-
 $PROJECT = 'cppyythonizations'
 
 $ACTIVITIES = [
