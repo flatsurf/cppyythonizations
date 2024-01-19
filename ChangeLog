@@ -4,6 +4,20 @@ cppyythonizations Change Log
 
 .. current developments
 
+v1.2.3
+====================
+
+**Changed:**
+
+* Changed packaging to use pyproject.toml instead of the overly complicated autotools setup copied over from the C++/Python projects.
+
+**Fixed:**
+
+* Adapted cppyythonizations to different ways of type printing in different versions of cppyy.
+* Include tribool in the distributed package.
+
+
+
 v1.2.2
 ====================
 
