@@ -211,6 +211,11 @@ def unpickle_from_cereal(t, data, headers):
     if isinstance(data, dict) and SMARTPTR_KEY in data:
         t = data[SMARTPTR_KEY]
         del data[SMARTPTR_KEY]
+    if isinstance(t, type):
+        t = t.__cpp_name__
+    if not t.startswith("::"):
+        # Look up the type in global scope.
+        t = "::" + t
     data = json.dumps({ "cereal": data })
 
     return _load_headers(headers).deserialize[t](data)
@@ -533,7 +538,13 @@ def enable_cereal(proxy, name, headers=[], yaml_tag=None):
         >>> def loadsdumps(obj):
         ...     dump = obj.to_json()
         ...     load = type(obj).from_json(dump)
-        ...     if type(load) != type(obj) or load != obj: raise Exception("%r dumped to %r which loaded to %r but these two are not equal"%(obj, dump, load))
+        ...     def eq(a, b):
+        ...         if type(a) != type(b): return False
+        ...         if hasattr(a, "get") and hasattr(b, "get"):
+        ...             a = a.get()
+        ...             b = b.get()
+        ...         return a == b
+        ...     if not eq(load, obj): raise Exception("%r dumped to %r which loaded to %r but these two are not equal"%(obj, dump, load))
         ...     yaml = YAML()
         ...     add_cereal(yaml)
         ...     yaml.register_class(type(obj))
@@ -545,7 +556,7 @@ def enable_cereal(proxy, name, headers=[], yaml_tag=None):
         ...     print(dump)
         ...     buffer.seek(0)
         ...     load = yaml.load(buffer)
-        ...     if type(load) != type(obj) or load != obj: raise Exception("%r dumped to %r which loaded to %r but these two are not equal"%(obj, dump, load))
+        ...     if not eq(load, obj): raise Exception("%r dumped to %r which loaded to %r but these two are not equal"%(obj, dump, load))
 
     Our demo object can be dumped and loaded::
 
@@ -636,17 +647,49 @@ def enable_cereal(proxy, name, headers=[], yaml_tag=None):
         : !<tag:cppyy.dev,2020:map#>
           1337: A
 
+    Intrusive pointers can be serialized::
+
+        >>> cppyy.include("boost/smart_ptr/intrusive_ptr.hpp")
+        True
+
+        >>> cppyy.cppdef(r'''
+        ... namespace cppyythonizations::test {
+        ...     struct X {
+        ...         int refcount;
+        ...     };
+        ...     bool operator==(const X&, const X&) { return true; }
+        ...     auto makeX() { return ::boost::intrusive_ptr<X>(new X()); }
+        ...     void intrusive_ptr_add_ref(::cppyythonizations::test::X* x) { x->refcount++; }
+        ...     void intrusive_ptr_release(::cppyythonizations::test::X* x) { if(!--x->refcount) delete(x); }
+        ...     template <typename Archive>
+        ...     void save(Archive& archive, const ::boost::intrusive_ptr<X>&) {}
+        ...     template <typename Archive>
+        ...     void load(Archive& archive, ::boost::intrusive_ptr<X>& x) { x = makeX(); }
+        ... }
+        ... namespace cppyythonizations::boost {} // Make sure that a workaround for https://github.com/wlav/cppyy/issues/253 is in place
+        ... ''')
+        True
+
+        >>> cppyy.py.add_pythonization(filtered("intrusive_ptr<cppyythonizations::test::X>")(enable_cereal), "boost")
+
+        >>> x = cppyy.gbl.cppyythonizations.test.makeX()
+        >>> loadsdumps(x)
+        %TAG !cereal! tag:cppyy.dev,2020:cereal#
+        --- !cereal!boost::intrusive_ptr[cppyythonizations::test::X] {}
+
     """
     def reduce(self):
         r"""
         A generic ``__reduce__`` implementation that delegates to cereal.
         """
+        from cppyythonizations.util import typename
+
         if not self.__smartptr__():
-            assert cppyy.gbl.std.is_default_constructible[type(self)]().value, "only default constructible types can be handled by cereal but %s is not default constructible; you might wrap your type into a smart pointer or make it default constructible"%(type(self),)
+            assert cppyy.gbl.std.is_default_constructible[typename(type(self))]().value, "only default constructible types can be handled by cereal but %s is not default constructible; you might wrap your type into a smart pointer or make it default constructible"%(type(self),)
 
         ptr = self.__smartptr__()
 
-        cereal = _load_headers(headers).serialize[type(ptr or self)](ptr or self)
+        cereal = _load_headers(headers).serialize[typename(type(ptr or self))](ptr or self)
         cereal = json.loads(bytes(cereal))
         cereal = cereal["cereal"]
 
