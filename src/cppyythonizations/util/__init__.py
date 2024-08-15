@@ -198,3 +198,23 @@ def wrap_method(name):
         return wrapped
 
     return wrap
+
+
+def typename(type):
+    r"""
+    Return a C++ type name for the C++ backed ``type``.
+
+    This works around https://github.com/wlav/cppyy/issues/253.
+
+    EXAMPLES::
+
+        >>> import cppyy
+        >>> from cppyythonizations.util import typename
+        >>> typename(cppyy.gbl.std.string)
+        '::std::string'
+
+    """
+    typename = type.__cpp_name__
+    if not typename.startswith("::"):
+        typename = "::" + typename
+    return typename

@@ -119,7 +119,8 @@ def enable_operator(op, prefixes=["", "r", "i"]):
             def make_py_binary(cpp_binary):
 
                 def py_binary(self, rhs):
-                    return cpp_binary[type(self), type(rhs)](self, rhs)
+                    from cppyythonizations.util import typename
+                    return cpp_binary[typename(type(self)), typename(type(rhs))](self, rhs)
 
                 return py_binary if unwrap is None else lambda self, rhs: unwrap(py_binary(self, rhs))
             setattr(proxy, "__" + prefix + op + "__", make_py_binary(cpp_binary))

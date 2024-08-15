@@ -137,7 +137,8 @@ def make_any(type):
         <cppyy.gbl.boost.type_erasure.any<SizeInterface,boost::type_erasure::_self> object at 0x...
 
     """
-    return cppyy.gbl.cppyythonizations.boost.type_erasure.any[type].make
+    from cppyythonizations.util import typename
+    return cppyy.gbl.cppyythonizations.boost.type_erasure.any[typename(type)].make
 
 
 def expose(name, cpp_name=None):
