@@ -4,6 +4,15 @@ cppyythonizations Change Log
 
 .. current developments
 
+v1.2.4
+====================
+
+**Fixed:**
+
+* Fixed namespace lookup issues caused by https://github.com/wlav/cppyy/issues/253
+
+
+
 v1.2.3
 ====================
 
