@@ -12,7 +12,7 @@ readme = "README.md"
 classifiers = [
   "License :: OSI Approved :: MIT License"
 ]
-version = "1.2.3"
+version = "1.2.4"
 dependencies = ["cppyy"]
 
 [project.urls]
