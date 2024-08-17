@@ -9,10 +9,10 @@
 # to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 # copies of the Software, and to permit persons to whom the Software is
 # furnished to do so, subject to the following conditions:
-# 
+#
 # The above copyright notice and this permission notice shall be included in all
 # copies or substantial portions of the Software.
-# 
+#
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 # IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 # FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -213,8 +213,17 @@ def typename(type):
         >>> typename(cppyy.gbl.std.string)
         '::std::string'
 
+        >>> typename(int)
+        'int'
+
+        >>> typename(cppyy.gbl.short)
+        'short'
+
     """
-    typename = type.__cpp_name__
+    typename = cppyy._get_name(type)
+
     if not typename.startswith("::"):
-        typename = "::" + typename
+        if not cppyy.gbl.std.is_fundamental(typename).value:
+            typename = "::" + typename
+
     return typename
