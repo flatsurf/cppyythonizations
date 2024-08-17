@@ -4,6 +4,15 @@ cppyythonizations Change Log
 
 .. current developments
 
+v1.2.5
+====================
+
+**Fixed:**
+
+* Fixed rendering of builtin typenames in some places (we cannot refer to ``int`` as ``::int``.)
+
+
+
 v1.2.4
 ====================
 
