@@ -47,8 +47,6 @@ $ACTIVITIES = [
 ]
 
 $VERSION_BUMP_PATTERNS = [
-    ('recipe/meta.yaml', r"\{% set version =", r"{% set version = '$VERSION' %}"),
-    ('recipe/meta.yaml', r"\{% set build_number =", r"{% set build_number = '0' %}"),
     ('pyproject.toml', r"version =", 'version = "$VERSION"'),
 ]
 
