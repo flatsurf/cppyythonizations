@@ -54,6 +54,9 @@ rever = "*"
 # A recent functioning valgrind is only available on conda-forge linux builds.
 valgrind = "*"
 
+[tool.pixi.feature.dev.target.linux.pypi-dependencies]
+pytest-valgrind = "*"
+
 [tool.pixi.feature.python-39.dependencies]
 python = "3.9.*"
 
