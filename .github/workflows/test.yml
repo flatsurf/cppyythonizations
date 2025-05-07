@@ -8,52 +8,25 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  test-cppyythonizations:
-    runs-on: ${{ matrix.on }}
-    defaults:
-      run:
-        shell: bash -el {0}
+  test:
+    runs-on: "${{ matrix.on }}"
     strategy:
       matrix:
-        python: ["3.8", "3.9", "3.10", "3.11"]
-        on:
-          - ubuntu-22.04
-          - macos-13
-        target:
-          - check
-        include:
-          - python: "3.11"
-            on: ubuntu-22.04
-            target: check-valgrind
+        environment: [ python-39, python-310, python-311, python-312, dev ]
+        on: [ ubuntu-24.04, macos-13 ] # we do not test macos-14 yet since we don't have osx-arm64 in our pyproject.toml
     steps:
-      - uses: actions/checkout@v2
-        with: { submodules: recursive }
-      - uses: conda-incubator/setup-miniconda@v2
-        with: { miniforge-variant: "Mambaforge", miniforge-version: "latest", python-version: "${{matrix.python}}" }
-      - name: install dependencies
-        run: |
-          mamba env update --quiet -n test -f environment.yml
-          conda list
-      - name: install valgrind and libc debug symbols
-        run: |
-          sudo apt update
-          sudo apt install libc6-dbg
-
-          mamba install -y valgrind
-          pip install pytest-valgrind
-        if: ${{ matrix.target == 'check-valgrind' }}
-      # Work around https://github.com/conda-forge/cppyy-feedstock/issues/78
-      - name: Fix cppyy dependencies on macOS
-        run: |
-          mamba install -y libcxx=16
-        if: ${{ matrix.on == 'macos-13' }}
-      - name: make check
-        run: |
-          pytest --isolate --doctest-modules -vv
-        if: ${{ matrix.target == 'check' }}
-      - name: make check-valgrind
-        run: |
-          PYTHONMALLOC=malloc valgrind --show-leak-kinds=definite --log-file=/tmp/valgrind-output python -m pytest -vv --doctest-modules --isolate --valgrind --valgrind-log=/tmp/valgrind-output
-        if: ${{ matrix.target == 'check-valgrind' }}
-      - uses: flatsurf/actions/show-logs@main
-        if: ${{ always() }}
+    - uses: actions/checkout@v4
+      with: { submodules: recursive }
+    - uses: prefix-dev/setup-pixi@v0.8.4
+      with:
+        pixi-version: v0.39.5
+        environments: ${{ matrix.environment }}
+    - run: |
+        pixi run -e ${{ matrix.environment }} test
+    - run: |
+        sudo apt update
+        sudo apt install -y libc6-dbg
+        pixi run -e ${{ matrix.environment }} test-valgrind
+      if: ${{ matrix.environment == 'dev' && matrix.on == 'ubuntu-24.04' }}
+    - uses: flatsurf/actions/show-logs@main
+      if: ${{ always() }}
