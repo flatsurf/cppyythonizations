@@ -12,7 +12,7 @@ jobs:
     runs-on: "${{ matrix.on }}"
     strategy:
       matrix:
-        environment: [ python-38, python-39, python-310, python-311, python-312, dev ]
+        environment: [ python-39, python-310, python-311, python-312, dev ]
         on: [ ubuntu-24.04, macos-13 ] # we do not test macos-14 yet since we don't have osx-arm64 in our pyproject.toml
     steps:
     - uses: actions/checkout@v4
