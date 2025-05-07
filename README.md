@@ -1,5 +1,3 @@
-![Test](https://github.com/flatsurf/cppyythonizations/workflows/Test/badge.svg)
-
 A collection of [Pythonizations](https://cppyy.readthedocs.io/en/latest/pythonizations.html) for [cppyy](https://cppyy.readthedocs.io/en/latest/index.html).
 
 These mostly work around known limitations of cppyy or provide some
